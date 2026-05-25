@@ -98,7 +98,8 @@ export async function POST(req: NextRequest) {
 
     // 5. Build request
     const headers = providerConfig.headers(credentials);
-    const upstreamUrl = `${providerConfig.baseUrl}/chat/completions`;
+    const baseUrl = account.baseUrl || providerConfig.baseUrl;
+    const upstreamUrl = `${baseUrl}/chat/completions`;
 
     const upstreamResp = await fetch(upstreamUrl, {
       method: 'POST',

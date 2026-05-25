@@ -24,6 +24,8 @@ export interface ProviderAccount {
   authMethod: 'apikey' | 'oauth';
   // For API key auth
   apiKey?: string;
+  // Custom base URL override (e.g. OpenAI proxy)
+  baseUrl?: string;
   // For OAuth
   oauthTokenId?: string;
   // Stats

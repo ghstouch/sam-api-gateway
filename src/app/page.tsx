@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 // ─── Types ───
 interface Provider {
   id: string; name: string; icon: string; models: string[];
-  authMethods: string[]; hasOAuth: boolean;
+  authMethods: string[]; hasOAuth: boolean; baseUrl?: string;
 }
 
 interface ProviderAccount {
   id: string; provider: string; name: string; authMethod: string;
-  apiKey?: string; oauthTokenId?: string; requestCount: number;
+  apiKey?: string; baseUrl?: string; oauthTokenId?: string; requestCount: number;
   totalTokens: number; totalCost: number; lastUsed: string | null;
   enabled: boolean; priority: number; rateLimit: number;
 }
@@ -595,14 +595,15 @@ function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
 function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   providers: Provider[]; accounts: ProviderAccount[]; onReload: () => void; showMsg: (m: string) => void;
 }) {
-  const [form, setForm] = useState({ provider: '', name: '', authMethod: 'apikey' as 'apikey' | 'oauth', apiKey: '', priority: '0', rateLimit: '0' });
+  const [form, setForm] = useState({ provider: '', name: '', authMethod: 'apikey' as 'apikey' | 'oauth', apiKey: '', baseUrl: '', priority: '0', rateLimit: '0' });
 
   async function addAccount(e: React.FormEvent) {
     e.preventDefault();
     const data: any = { provider: form.provider, name: form.name, authMethod: form.authMethod, priority: parseInt(form.priority) || 0, rateLimit: parseInt(form.rateLimit) || 0 };
     if (form.authMethod === 'apikey') data.apiKey = form.apiKey;
+    if (form.baseUrl.trim()) data.baseUrl = form.baseUrl.trim();
     const res = await api('/api/admin/providers', { method: 'POST', body: JSON.stringify(data) });
-    if (res.account) { showMsg('Account added!'); setForm({ ...form, name: '', apiKey: '' }); onReload(); }
+    if (res.account) { showMsg('Account added!'); setForm({ ...form, name: '', apiKey: '', baseUrl: '' }); onReload(); }
     else showMsg('Error: ' + (res.error || 'Failed'));
   }
 
@@ -643,6 +644,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
           {form.authMethod === 'apikey' && (
             <input value={form.apiKey} onChange={e => setForm({ ...form, apiKey: e.target.value })} placeholder="API Key" style={inputStyle} required />
           )}
+          <input value={form.baseUrl} onChange={e => setForm({ ...form, baseUrl: e.target.value })} placeholder="Base URL (optional, e.g. https://api.openai.com/v1)" style={inputStyle} />
           <input value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })} placeholder="Priority (0=highest)" type="number" style={inputStyle} />
           <input value={form.rateLimit} onChange={e => setForm({ ...form, rateLimit: e.target.value })} placeholder="Rate limit/min (0=unlimited)" type="number" style={inputStyle} />
         </div>
@@ -657,7 +659,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table style={tableStyle}>
-            <thead><tr><th>Provider</th><th>Name</th><th>Auth</th><th>Key</th><th>Priority</th><th>Requests</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Provider</th><th>Name</th><th>Auth</th><th>Key</th><th>Base URL</th><th>Priority</th><th>Requests</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               {accounts.map(a => (
                 <tr key={a.id}>
@@ -665,6 +667,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                   <td style={{ fontWeight: 500 }}>{a.name}</td>
                   <td><span style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>{a.authMethod}</span></td>
                   <td><code style={{ fontSize: 11 }}>{a.apiKey ? maskKey(a.apiKey) : '-'}</code></td>
+                  <td><code style={{ fontSize: 10, color: '#888' }}>{a.baseUrl || providers.find(p => p.id === a.provider)?.baseUrl || '-'}</code></td>
                   <td>{a.priority}</td>
                   <td>{a.requestCount.toLocaleString()}</td>
                   <td><span style={{ color: a.enabled ? '#10b981' : '#c9a227', fontSize: 12 }}>{a.enabled ? 'Active' : 'Disabled'}</span></td>
