@@ -259,14 +259,14 @@ export default function Dashboard() {
               onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = '#d4a843'; }}
               onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = '#888'; }}
               style={{
-                ...btnStyle,
                 padding: '16px 20px',
                 fontSize: 14,
                 fontWeight: isActive ? 700 : 500,
-                background: 'transparent',
+                background: 'none',
                 border: 'none',
                 borderBottom: isActive ? '2px solid #d4a843' : '2px solid transparent',
                 color: isActive ? '#d4a843' : '#888',
+                cursor: 'pointer',
                 borderRadius: 0,
                 whiteSpace: 'nowrap',
                 transition: 'all 0.2s',
