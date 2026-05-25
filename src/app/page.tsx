@@ -63,10 +63,10 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1a0000, #2d0a0a, #1a0505)' }}>
-      <form onSubmit={handleLogin} style={{ background: 'rgba(45,10,10,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: 40, width: 360 }}>
-        <h1 style={{ color: '#fff', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>SAM Gateway</h1>
-        <p style={{ color: '#888', textAlign: 'center', marginBottom: 24, fontSize: 14 }}>Multi-Provider OAuth API Gateway</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0a0a, #1a0505, #0a0a0a)' }}>
+      <form onSubmit={handleLogin} style={{ background: 'rgba(20,5,5,0.8)', backdropFilter: 'blur(20px)', border: '1px solid #dc2626', boxShadow: '0 0 30px rgba(16,185,129,0.1)', borderRadius: 16, padding: 40, width: 360 }}>
+        <h1 style={{ color: '#dc2626', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>SAM Gateway</h1>
+        <p style={{ color: '#6ee7b7', textAlign: 'center', marginBottom: 24, fontSize: 14 }}>Multi-Provider OAuth API Gateway</p>
         <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" style={inputStyle} />
         <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Password" style={inputStyle} />
         {error && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12 }}>{error}</p>}
@@ -133,9 +133,9 @@ export default function Dashboard() {
   ] as const;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1a0000, #2d0a0a, #1a0505)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a0a0a, #1a0505, #0a0a0a)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <header style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(220,38,38,0.3)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontSize: 20, margin: 0 }}>SAM Gateway</h1>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           {msg && <span style={{ color: '#4ade80', fontSize: 13 }}>{msg}</span>}
@@ -144,12 +144,12 @@ export default function Dashboard() {
       </header>
 
       {/* Tabs */}
-      <nav style={{ display: 'flex', gap: 4, padding: '12px 24px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <nav style={{ display: 'flex', gap: 4, padding: '12px 24px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(220,38,38,0.15)' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             ...btnStyle, padding: '8px 16px', fontSize: 13,
             background: tab === t.id ? 'rgba(16,185,129,0.3)' : 'transparent',
-            border: tab === t.id ? '1px solid rgba(139,92,246,0.5)' : '1px solid transparent',
+            border: tab === t.id ? '1px solid rgba(220,38,38,0.5)' : '1px solid transparent',
           }}>{t.label}</button>
         ))}
       </nav>
@@ -553,7 +553,7 @@ Client C|60`,
         <h3 style={{ fontSize: 14, marginBottom: 8 }}>Available Providers</h3>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {providers.map(p => (
-            <span key={p.id} style={{ background: 'rgba(16,185,129,0.2)', padding: '4px 10px', borderRadius: 6, fontSize: 12 }}>
+            <span key={p.id} style={{ background: 'rgba(220,38,38,0.15)', padding: '4px 10px', borderRadius: 6, fontSize: 12, border: '1px solid rgba(220,38,38,0.2)' }}>
               {p.icon} {p.id}
             </span>
           ))}
@@ -565,8 +565,8 @@ Client C|60`,
 
 // ─── Shared Styles ───
 const inputStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'rgba(0,0,0,0.4)',
+  border: '1px solid rgba(220,38,38,0.3)',
   borderRadius: 8,
   padding: '8px 12px',
   color: '#eee',
@@ -575,8 +575,8 @@ const inputStyle: React.CSSProperties = {
 };
 
 const btnStyle: React.CSSProperties = {
-  background: 'rgba(16,185,129,0.2)',
-  border: '1px solid rgba(16,185,129,0.3)',
+  background: 'rgba(16,185,129,0.15)',
+  border: '1px solid rgba(16,185,129,0.4)',
   borderRadius: 8,
   padding: '8px 16px',
   color: '#6ee7b7',
@@ -585,8 +585,8 @@ const btnStyle: React.CSSProperties = {
 };
 
 const cardStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.02)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  background: 'rgba(0,0,0,0.3)',
+  border: '1px solid rgba(220,38,38,0.2)',
   borderRadius: 12,
   padding: 20,
 };
