@@ -22,20 +22,17 @@ export interface ProviderAccount {
   provider: string;
   name: string;
   authMethod: 'apikey' | 'oauth';
-  // For API key auth
   apiKey?: string;
-  // Custom base URL override (e.g. OpenAI proxy)
   baseUrl?: string;
-  // For OAuth
+  apiType?: string; // chat, responses, embeddings, audio-transcription, audio-speech, images
   oauthTokenId?: string;
-  // Stats
   requestCount: number;
   totalTokens: number;
   totalCost: number;
   lastUsed: string | null;
   enabled: boolean;
-  priority: number; // Lower = higher priority for routing
-  rateLimit: number; // Requests per minute, 0 = unlimited
+  priority: number;
+  rateLimit: number;
 }
 
 export interface UsageRecord {

@@ -9,7 +9,7 @@ interface Provider {
 
 interface ProviderAccount {
   id: string; provider: string; name: string; authMethod: string;
-  apiKey?: string; baseUrl?: string; oauthTokenId?: string; requestCount: number;
+  apiKey?: string; baseUrl?: string; apiType?: string; oauthTokenId?: string; requestCount: number;
   totalTokens: number; totalCost: number; lastUsed: string | null;
   enabled: boolean; priority: number; rateLimit: number;
 }
@@ -601,23 +601,53 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
-  // Build provider cards from accounts only — no pre-configured providers
+  // Categorize providers
+  const CATEGORIES: Record<string, { label: string; desc?: string; match: (id: string) => boolean }> = {
+    compatible: { label: 'API Key Compatible Providers', match: id => ['openai', 'anthropic', 'openrouter', 'agentrouter'].some(k => id.includes(k)) },
+    free: { label: 'Free Tier Providers', desc: 'Providers with free tiers — some require an API key signup.', match: id => ['gemini', 'google', 'kiro'].some(k => id.includes(k)) },
+    llm: { label: 'LLM Providers', match: id => ['mimo', 'reka', 'deepseek', 'mistral', 'cohere', 'groq'].some(k => id.includes(k)) },
+    other: { label: 'Other Providers', match: () => true },
+  };
+
+  // Build provider groups from accounts
   const providerGroups = (() => {
     const groups: Record<string, { id: string; name: string; accounts: ProviderAccount[] }> = {};
     for (const a of accounts) {
-      if (!groups[a.provider]) {
-        groups[a.provider] = { id: a.provider, name: a.provider, accounts: [] };
-      }
+      if (!groups[a.provider]) groups[a.provider] = { id: a.provider, name: a.provider, accounts: [] };
       groups[a.provider].accounts.push(a);
     }
     return Object.values(groups);
   })();
 
+  // Group into sections
+  const sections = (() => {
+    const result: { key: string; label: string; desc?: string; providers: typeof providerGroups }[] = [];
+    const used = new Set<string>();
+    for (const [key, cat] of Object.entries(CATEGORIES)) {
+      const matched = providerGroups.filter(pg => { if (!used.has(pg.id) && cat.match(pg.id)) { used.add(pg.id); return true; } return false; });
+      if (matched.length > 0 || key !== 'other') {
+        result.push({ key, label: cat.label, desc: cat.desc, providers: matched });
+      }
+    }
+    return result;
+  })();
+
+  // Toggle state per provider
+  async function toggleAccount(id: string, updates: any) {
+    await api('/api/admin/providers', { method: 'PATCH', body: JSON.stringify({ id, ...updates }) });
+    showMsg('Updated'); onReload();
+  }
+
+  async function deleteAccount(id: string) {
+    if (!confirm('Delete this connection?')) return;
+    await api('/api/admin/providers', { method: 'DELETE', body: JSON.stringify({ id }) });
+    showMsg('Deleted'); onReload();
+  }
+
   async function addAccount(e: React.FormEvent) {
     e.preventDefault();
-    // Auto-generate provider ID from name (kebab-case, lowercase)
     const providerId = form.provider.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const data: any = { provider: providerId, name: form.name, authMethod: 'apikey', priority: 0, rateLimit: 0, apiKey: form.apiKey };
+    const data: any = { provider: providerId, name: form.name, authMethod: 'apikey', priority: 0, rateLimit: 0, apiKey: form.apiKey, apiType: form.apiType };
     if (form.baseUrl.trim()) data.baseUrl = form.baseUrl.trim();
     const res = await api('/api/admin/providers', { method: 'POST', body: JSON.stringify(data) });
     if (res.account) {
@@ -629,176 +659,138 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
     } else showMsg('Error: ' + (res.error || 'Failed'));
   }
 
-  async function deleteAccount(id: string) {
-    if (!confirm('Delete this connection?')) return;
-    await api('/api/admin/providers', { method: 'DELETE', body: JSON.stringify({ id }) });
-    showMsg('Deleted'); onReload();
-  }
-
-  async function toggleAccount(id: string, updates: any) {
-    await api('/api/admin/providers', { method: 'PATCH', body: JSON.stringify({ id, ...updates }) });
-    showMsg('Updated'); onReload();
-  }
-
   async function checkKey() {
     if (!form.apiKey || !form.baseUrl) { setCheckResult({ ok: false, msg: 'Need API key + base URL' }); return; }
-    setChecking(true);
-    setCheckResult(null);
+    setChecking(true); setCheckResult(null);
     try {
       const res = await fetch(form.baseUrl + '/models', { headers: { 'Authorization': 'Bearer ' + form.apiKey } });
       if (res.ok) {
         const data = await res.json().catch(() => null);
         const count = data?.data?.length || 0;
         setCheckResult({ ok: true, msg: `Connected! ${count} model${count !== 1 ? 's' : ''} found.` });
-      } else {
-        setCheckResult({ ok: false, msg: `Failed (${res.status}) — key invalid or endpoint unreachable` });
-      }
-    } catch {
-      setCheckResult({ ok: false, msg: 'Connection failed — check base URL' });
-    }
+      } else setCheckResult({ ok: false, msg: `Failed (${res.status})` });
+    } catch { setCheckResult({ ok: false, msg: 'Connection failed' }); }
     setChecking(false);
   }
 
-  function maskKey(key: string) {
-    if (!key) return '-';
-    if (key.length <= 10) return key;
-    return key.slice(0, 6) + '...' + key.slice(-4);
-  }
+  function maskKey(key: string) { if (!key) return '-'; return key.length <= 10 ? key : key.slice(0, 6) + '...' + key.slice(-4); }
+  function openAddModal(providerId?: string) { setForm(f => ({ ...f, provider: providerId || '', name: '', apiKey: '', baseUrl: '' })); setCheckResult(null); setShowModal(true); }
 
-  function openAddModal(providerId?: string) {
-    setForm(f => ({ ...f, provider: providerId || '', name: '', apiKey: '', baseUrl: '' }));
-    setCheckResult(null);
-    setShowModal(true);
-  }
+  const enabledCount = accounts.filter(a => a.enabled).length;
 
-  // Detail view for a specific provider
+  // ─── Detail view ───
   if (selectedProvider) {
     const pg = providerGroups.find(p => p.id === selectedProvider);
     if (!pg) { setSelectedProvider(null); return null; }
-
     return (
       <div>
-        {/* Back button */}
-        <button onClick={() => setSelectedProvider(null)} style={{ ...btnStyle, marginBottom: 16, fontSize: 13 }}>
-          Back to Providers
-        </button>
-
-        {/* Provider header */}
+        <button onClick={() => setSelectedProvider(null)} style={{ ...btnStyle, marginBottom: 16, fontSize: 13 }}>Back to Providers</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
           <span style={{ fontSize: 32 }}>🔗</span>
-          <div>
-            <h2 style={{ fontSize: 22, margin: 0 }}>{pg.name}</h2>
-            <p style={{ color: '#888', margin: 0, fontSize: 13 }}>{pg.accounts.length} connection{pg.accounts.length !== 1 ? 's' : ''}</p>
-          </div>
-          <button onClick={() => openAddModal(pg.id)} style={{ ...btnStyle, marginLeft: 'auto', background: 'linear-gradient(135deg, #d4a843, #c9a227)', color: '#0a0a0a', fontWeight: 600 }}>
-            + Add Key
-          </button>
+          <div><h2 style={{ fontSize: 22, margin: 0 }}>{pg.name}</h2><p style={{ color: '#888', margin: 0, fontSize: 13 }}>{pg.accounts.length} connection{pg.accounts.length !== 1 ? 's' : ''}</p></div>
+          <button onClick={() => openAddModal(pg.id)} style={{ ...btnStyle, marginLeft: 'auto', background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontWeight: 500, borderColor: 'rgba(239,68,68,0.3)' }}>+ Add Key</button>
         </div>
-
-        {/* Connections */}
         <h3 style={{ fontSize: 16, marginBottom: 12 }}>Connections</h3>
-        {pg.accounts.length === 0 ? (
-          <div style={{ ...cardStyle, textAlign: 'center', color: '#666', padding: 32 }}>
-            No connections yet. Click "+ Add Key" to add one.
+        {pg.accounts.map((a, i) => (
+          <div key={a.id} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px', marginBottom: 8 }}>
+            <span style={{ color: a.enabled ? '#10b981' : '#ef4444', fontSize: 10 }}>●</span>
+            <span style={{ color: '#888', fontSize: 12, minWidth: 20 }}>#{i + 1}</span>
+            <span style={{ fontWeight: 500, fontSize: 14, flex: 1 }}>{a.name}</span>
+            {a.apiKey && <code style={{ fontSize: 11, color: '#888' }}>{maskKey(a.apiKey)}</code>}
+            <span style={{ fontSize: 11, color: '#888' }}>{a.requestCount.toLocaleString()} req</span>
+            <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#888' }}>{a.apiType || 'chat'}</span>
+            <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
+            <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Delete</button>
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {pg.accounts.map((a, i) => (
-              <div key={a.id} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px' }}>
-                <span style={{ color: a.enabled ? '#10b981' : '#c9a227', fontSize: 10 }}>●</span>
-                <span style={{ color: '#888', fontSize: 12, minWidth: 20 }}>#{i + 1}</span>
-                <span style={{ fontWeight: 500, fontSize: 14, flex: 1 }}>{a.name}</span>
-                {a.apiKey && <code style={{ fontSize: 11, color: '#888' }}>{maskKey(a.apiKey)}</code>}
-                <span style={{ fontSize: 11, color: '#888' }}>{a.requestCount.toLocaleString()} req</span>
-                <span style={{ fontSize: 11, color: a.enabled ? '#10b981' : '#c9a227' }}>{a.enabled ? 'Active' : 'Disabled'}</span>
-                <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
-                <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Delete</button>
-              </div>
-            ))}
-          </div>
-        )}
+        ))}
       </div>
     );
   }
 
-  // Cards grid view
+  // ─── Main view ───
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <h2 style={{ fontSize: 18, margin: 0 }}>Providers</h2>
-        <button onClick={() => openAddModal()} style={{ ...btnStyle, background: 'linear-gradient(135deg, #d4a843, #c9a227)', color: '#0a0a0a', fontWeight: 600 }}>
-          + Add Account
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button style={{ ...btnStyle, background: 'rgba(255,255,255,0.08)', color: '#ccc', fontSize: 13, padding: '6px 14px' }}>Test All</button>
+          <button onClick={() => openAddModal()} style={{ ...btnStyle, background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: 13, padding: '6px 14px', borderColor: 'rgba(239,68,68,0.3)' }}>+ Add OpenAI Compatible</button>
+        </div>
       </div>
 
-      {/* Provider Cards Grid */}
-      {providerGroups.length === 0 ? (
+      {/* Sections */}
+      {sections.map(sec => (
+        <div key={sec.key} style={{ marginBottom: 32 }}>
+          {/* Section header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: sec.providers.length > 0 ? '#10b981' : '#555' }} />
+            <span style={{ fontWeight: 600, fontSize: 15 }}>{sec.label}</span>
+            <span style={{ fontSize: 12, color: '#888', marginLeft: 4 }}>{sec.providers.filter(p => p.accounts.some(a => a.enabled)).length}/{sec.providers.length}</span>
+            <div style={{ flex: 1 }} />
+            <button style={{ ...btnStyle, background: 'rgba(255,255,255,0.06)', color: '#888', fontSize: 12, padding: '4px 12px' }}>Test All</button>
+          </div>
+          {sec.desc && <p style={{ fontSize: 12, color: '#555', margin: '0 0 12px 18px' }}>{sec.desc}</p>}
+
+          {/* Provider cards */}
+          {sec.providers.length === 0 ? (
+            <div style={{ ...cardStyle, textAlign: 'center', color: '#555', padding: 24, marginLeft: 18 }}>No providers in this category.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 18 }}>
+              {sec.providers.map(pg => {
+                const anyEnabled = pg.accounts.some(a => a.enabled);
+                return (
+                  <div key={pg.id} onClick={() => setSelectedProvider(pg.id)} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 16, padding: '12px 20px', cursor: 'pointer', transition: 'all 0.2s' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.15)'; }}
+                  >
+                    <span style={{ fontSize: 22 }}>🔗</span>
+                    <span style={{ fontWeight: 600, fontSize: 14, minWidth: 140 }}>{pg.name}</span>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: anyEnabled ? '#10b981' : '#ef4444' }} />
+                    <span style={{ fontSize: 12, color: '#888', minWidth: 90 }}>{pg.accounts.length} Connected</span>
+                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#888' }}>Chat</span>
+                    <div style={{ flex: 1 }} />
+                    {/* Toggle */}
+                    <div onClick={e => { e.stopPropagation(); const allOn = pg.accounts.every(a => a.enabled); pg.accounts.forEach(a => toggleAccount(a.id, { enabled: !allOn })); }}
+                      style={{ width: 36, height: 20, borderRadius: 10, background: anyEnabled ? '#10b981' : '#333', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${anyEnabled ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}` }}>
+                      <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 1, left: anyEnabled ? 17 : 1, transition: 'left 0.2s' }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Empty state */}
+      {providerGroups.length === 0 && (
         <div style={{ ...cardStyle, textAlign: 'center', padding: '48px 24px', color: '#666' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>No providers yet</div>
-          <div style={{ fontSize: 14, color: '#555' }}>Click "+ Add Account" to add your first provider.</div>
+          <div style={{ fontSize: 14, color: '#555' }}>Click "+ Add OpenAI Compatible" to add your first provider.</div>
         </div>
-      ) : (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
-        {providerGroups.map(pg => (
-          <div
-            key={pg.id}
-            onClick={() => setSelectedProvider(pg.id)}
-            style={{
-              ...cardStyle,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              borderColor: 'rgba(16,185,129,0.3)',
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(16,185,129,0.3)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 28 }}>🔗</span>
-              <span style={{ fontSize: 11, color: '#10b981' }}>
-                {pg.accounts.length} Connected
-              </span>
-            </div>
-            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{pg.name}</div>
-            <div style={{ fontSize: 11, color: '#888' }}>{pg.accounts.map(a => a.name).join(', ')}</div>
-          </div>
-        ))}
-      </div>
       )}
 
-      {/* Add Account Modal */}
+      {/* Add Modal */}
       {showModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000,
-        }} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
-          <div style={{
-            background: '#111', border: '1px solid rgba(212,168,67,0.3)',
-            borderRadius: 16, padding: 32, width: '100%', maxWidth: 480,
-            maxHeight: '90vh', overflow: 'auto',
-          }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+          onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div style={{ background: '#111', border: '1px solid rgba(212,168,67,0.3)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 480, maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h3 style={{ fontSize: 18, margin: 0 }}>Add OpenAI Compatible</h3>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: '#666', fontSize: 20, cursor: 'pointer' }}>×</button>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: '#666', fontSize: 20, cursor: 'pointer' }}>&#215;</button>
             </div>
-
             <form onSubmit={addAccount} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Provider Name */}
               <div>
                 <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Name</label>
-                <input value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })} placeholder="e.g. OpenAI, Anthropic, Xiaomi MiMo" style={{ ...inputStyle, width: '100%' }} required />
+                <input value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })} placeholder="e.g. OpenAI, Anthropic" style={{ ...inputStyle, width: '100%' }} required />
                 <span style={{ fontSize: 11, color: '#555' }}>Required. A friendly label for this provider.</span>
               </div>
-
-              {/* Prefix */}
               <div>
                 <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Prefix</label>
-                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. openai-prod, mimo-dev" style={{ ...inputStyle, width: '100%' }} required />
+                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. openai-prod" style={{ ...inputStyle, width: '100%' }} required />
                 <span style={{ fontSize: 11, color: '#555' }}>Required. Unique prefix for model names.</span>
               </div>
-
-              {/* API Type */}
               <div>
                 <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>API Type</label>
                 <select value={form.apiType} onChange={e => setForm({ ...form, apiType: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
@@ -810,36 +802,23 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                   <option value="images">Images Generations</option>
                 </select>
               </div>
-
-              {/* Base URL */}
               <div>
                 <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Base URL</label>
                 <input value={form.baseUrl} onChange={e => setForm({ ...form, baseUrl: e.target.value })} placeholder="https://api.openai.com/v1" style={{ ...inputStyle, width: '100%' }} />
                 <span style={{ fontSize: 11, color: '#555' }}>Root URL of your OpenAI-compatible API.</span>
               </div>
-
-              {/* API Key + Check */}
               <div>
                 <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>API Key (for Check)</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input value={form.apiKey} onChange={e => { setForm({ ...form, apiKey: e.target.value }); setCheckResult(null); }} placeholder="sk-..." style={{ ...inputStyle, flex: 1 }} />
-                  <button type="button" onClick={checkKey} disabled={checking} style={{ ...btnStyle, whiteSpace: 'nowrap', opacity: checking ? 0.5 : 1, background: 'rgba(255,255,255,0.08)', color: '#ccc' }}>
-                    {checking ? 'Checking...' : 'Check'}
-                  </button>
+                  <button type="button" onClick={checkKey} disabled={checking} style={{ ...btnStyle, whiteSpace: 'nowrap', opacity: checking ? 0.5 : 1, background: 'rgba(255,255,255,0.08)', color: '#ccc' }}>{checking ? 'Checking...' : 'Check'}</button>
                 </div>
                 {checkResult && (
-                  <div style={{
-                    marginTop: 8, padding: '8px 12px', borderRadius: 8, fontSize: 13,
-                    background: checkResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                    border: `1px solid ${checkResult.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                    color: checkResult.ok ? '#10b981' : '#ef4444',
-                  }}>
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, fontSize: 13, background: checkResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${checkResult.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, color: checkResult.ok ? '#10b981' : '#ef4444' }}>
                     {checkResult.ok ? '✓' : '✗'} {checkResult.msg}
                   </div>
                 )}
               </div>
-
-              {/* Actions */}
               <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
                 <button type="button" onClick={() => setShowModal(false)} style={{ ...btnStyle, flex: 1, background: 'rgba(255,255,255,0.05)', color: '#888' }}>Cancel</button>
                 <button type="submit" style={{ ...btnStyle, flex: 1, background: 'linear-gradient(135deg, #d4a843, #c9a227)', color: '#0a0a0a', fontWeight: 600 }}>Add</button>
