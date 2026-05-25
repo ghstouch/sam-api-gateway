@@ -693,8 +693,9 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <h2 style={{ fontSize: 18, margin: 0 }}>Providers</h2>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => openAddModal()} style={{ ...btnStyle, background: 'linear-gradient(135deg, #d4a843, #c9a227)', color: '#0a0a0a', fontSize: 13, padding: '6px 14px', fontWeight: 600 }}>+ Add OpenAI Compatible</button>
+          <button onClick={() => openAddModal()} style={{ ...btnStyle, background: 'linear-gradient(135deg, #d4a843, #c9a227)', color: '#0a0a0a', fontSize: 13, padding: '6px 14px', fontWeight: 600 }}>+ Add Anthropic Compatible</button>
           <button style={{ ...btnStyle, background: 'rgba(255,255,255,0.08)', color: '#ccc', fontSize: 13, padding: '6px 14px' }}>Test All</button>
-          <button onClick={() => openAddModal()} style={{ ...btnStyle, background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: 13, padding: '6px 14px', borderColor: 'rgba(239,68,68,0.3)' }}>+ Add OpenAI Compatible</button>
         </div>
       </div>
 
