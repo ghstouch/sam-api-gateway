@@ -202,6 +202,7 @@ export async function deleteOAuthToken(id: string): Promise<boolean> {
 export async function createProviderAccount(data: Omit<ProviderAccount, 'id' | 'requestCount' | 'totalTokens' | 'totalCost' | 'lastUsed'>): Promise<ProviderAccount> {
   const account: ProviderAccount = {
     ...data,
+    enabled: data.enabled ?? true,
     id: randomUUID(),
     requestCount: 0,
     totalTokens: 0,

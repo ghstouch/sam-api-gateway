@@ -16,7 +16,7 @@ interface ProviderAccount {
 
 interface GatewayKey {
   key: string; name: string; createdAt: string; lastUsed: string | null;
-  requestCount: number; enabled: boolean; rateLimit: number;
+  requestCount: number; totalTokens: number; enabled: boolean; rateLimit: number;
 }
 
 interface OAuthToken {
@@ -292,6 +292,15 @@ export default function Dashboard() {
   );
 }
 
+// ─── Shared Helpers ───
+function timeAgo(ts: string): string {
+  const diff = Date.now() - new Date(ts).getTime();
+  if (diff < 60000) return Math.floor(diff / 1000) + 's ago';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+  return Math.floor(diff / 86400000) + 'd ago';
+}
+
 // ─── Overview Tab (clovie-router style) ───
 function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
   providers: Provider[]; accounts: ProviderAccount[]; gatewayKeys: GatewayKey[]; oauthTokens: OAuthToken[];
@@ -322,14 +331,6 @@ function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     return n.toLocaleString();
-  }
-
-  function timeAgo(ts: string): string {
-    const diff = Date.now() - new Date(ts).getTime();
-    if (diff < 60000) return Math.floor(diff / 1000) + 's ago';
-    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
-    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
-    return Math.floor(diff / 86400000) + 'd ago';
   }
 
   const rangeBtns = ['Today', '24h', '7D', '30D', '60D'];
@@ -598,7 +599,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
 
   async function addAccount(e: React.FormEvent) {
     e.preventDefault();
-    const data: any = { provider: form.provider, name: form.name, authMethod: form.authMethod, priority: parseInt(form.priority), rateLimit: parseInt(form.rateLimit) };
+    const data: any = { provider: form.provider, name: form.name, authMethod: form.authMethod, priority: parseInt(form.priority) || 0, rateLimit: parseInt(form.rateLimit) || 0 };
     if (form.authMethod === 'apikey') data.apiKey = form.apiKey;
     const res = await api('/api/admin/providers', { method: 'POST', body: JSON.stringify(data) });
     if (res.account) { showMsg('Account added!'); setForm({ ...form, name: '', apiKey: '' }); onReload(); }
@@ -606,6 +607,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   }
 
   async function deleteAccount(id: string) {
+    if (!confirm('Delete this account?')) return;
     await api('/api/admin/providers', { method: 'DELETE', body: JSON.stringify({ id }) });
     showMsg('Deleted'); onReload();
   }
@@ -613,6 +615,12 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   async function toggleAccount(id: string, updates: any) {
     await api('/api/admin/providers', { method: 'PATCH', body: JSON.stringify({ id, ...updates }) });
     showMsg('Updated'); onReload();
+  }
+
+  function maskKey(key: string) {
+    if (!key) return '-';
+    if (key.length <= 10) return key;
+    return key.slice(0, 6) + '...' + key.slice(-4);
   }
 
   return (
@@ -642,28 +650,34 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
       </form>
 
       {/* Accounts List */}
-      <div style={{ overflowX: 'auto' }}>
-        <table style={tableStyle}>
-          <thead><tr><th>Provider</th><th>Name</th><th>Auth</th><th>Priority</th><th>Requests</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody>
-            {accounts.map(a => (
-              <tr key={a.id}>
-                <td>{providers.find(p => p.id === a.provider)?.icon} {a.provider}</td>
-                <td>{a.name}</td>
-                <td>{a.authMethod}</td>
-                <td>{a.priority}</td>
-                <td>{a.requestCount}</td>
-                <td><span style={{ color: a.enabled ? '#d4a843' : '#c9a227' }}>{a.enabled ? 'OK' : 'NO'}</span></td>
-                <td style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
-                  <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(201,162,39,0.2)' }}>Delete</button>
-                </td>
-              </tr>
-            ))}
-            {accounts.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: '#666' }}>No accounts</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      {accounts.length === 0 ? (
+        <div style={{ ...cardStyle, textAlign: 'center', color: '#666', padding: 40 }}>
+          No provider accounts. Add one above to start routing requests.
+        </div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={tableStyle}>
+            <thead><tr><th>Provider</th><th>Name</th><th>Auth</th><th>Key</th><th>Priority</th><th>Requests</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {accounts.map(a => (
+                <tr key={a.id}>
+                  <td>{providers.find(p => p.id === a.provider)?.icon} {a.provider}</td>
+                  <td style={{ fontWeight: 500 }}>{a.name}</td>
+                  <td><span style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>{a.authMethod}</span></td>
+                  <td><code style={{ fontSize: 11 }}>{a.apiKey ? maskKey(a.apiKey) : '-'}</code></td>
+                  <td>{a.priority}</td>
+                  <td>{a.requestCount.toLocaleString()}</td>
+                  <td><span style={{ color: a.enabled ? '#10b981' : '#c9a227', fontSize: 12 }}>{a.enabled ? 'Active' : 'Disabled'}</span></td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
+                    <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: 'rgba(239,68,68,0.2)', color: '#ef4444' }}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -673,6 +687,7 @@ function KeysTab({ gatewayKeys, onReload, showMsg }: {
   gatewayKeys: GatewayKey[]; onReload: () => void; showMsg: (m: string) => void;
 }) {
   const [keyName, setKeyName] = useState('');
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   async function generateKey(e: React.FormEvent) {
     e.preventDefault();
@@ -682,6 +697,7 @@ function KeysTab({ gatewayKeys, onReload, showMsg }: {
   }
 
   async function deleteKey(key: string) {
+    if (!confirm('Revoke this key? This cannot be undone.')) return;
     await api('/api/admin/keys', { method: 'DELETE', body: JSON.stringify({ key }) });
     showMsg('Revoked'); onReload();
   }
@@ -691,42 +707,75 @@ function KeysTab({ gatewayKeys, onReload, showMsg }: {
     showMsg('Toggled'); onReload();
   }
 
+  function copyKey(key: string) {
+    navigator.clipboard.writeText(key);
+    setCopiedKey(key);
+    showMsg('Copied!');
+    setTimeout(() => setCopiedKey(null), 2000);
+  }
+
+  function maskKey(key: string) {
+    if (key.length <= 12) return key;
+    return key.slice(0, 8) + '...' + key.slice(-6);
+  }
+
   return (
     <div>
       <h2 style={{ fontSize: 18, marginBottom: 16 }}>Gateway API Keys</h2>
 
+      {/* Generate Key Form */}
       <form onSubmit={generateKey} style={{ ...cardStyle, marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
-        <input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder="Key name" style={{ ...inputStyle, flex: 1 }} />
+        <input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder="Key name (e.g. My App)" style={{ ...inputStyle, flex: 1 }} />
         <button type="submit" style={btnStyle}>Generate Key</button>
       </form>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table style={tableStyle}>
-          <thead><tr><th>Name</th><th>Key</th><th>Requests</th><th>Last Used</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody>
-            {gatewayKeys.map(k => (
-              <tr key={k.key}>
-                <td>{k.name}</td>
-                <td>
-                  <code 
-                    style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4, cursor: 'pointer' }}
-                    onClick={() => { navigator.clipboard.writeText(k.key); showMsg('Copied!'); }}
-                    title="Click to copy"
-                  >{k.key}</code>
-                </td>
-                <td>{k.requestCount}</td>
-                <td>{k.lastUsed ? new Date(k.lastUsed).toLocaleString() : 'Never'}</td>
-                <td><span style={{ color: k.enabled ? '#d4a843' : '#c9a227' }}>{k.enabled ? 'OK' : 'NO'}</span></td>
-                <td style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => { navigator.clipboard.writeText(k.key); showMsg('Copied!'); }} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>Copy</button>
-                  <button onClick={() => toggleKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>{k.enabled ? 'Disable' : 'Enable'}</button>
-                  <button onClick={() => deleteKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(201,162,39,0.2)' }}>Revoke</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Keys List */}
+      {gatewayKeys.length === 0 ? (
+        <div style={{ ...cardStyle, textAlign: 'center', color: '#666', padding: 40 }}>
+          No API keys yet. Generate one above.
+        </div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={tableStyle}>
+            <thead><tr><th>Name</th><th>Key</th><th>Requests</th><th>Tokens</th><th>Last Used</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {gatewayKeys.map(k => (
+                <tr key={k.key}>
+                  <td style={{ fontWeight: 500 }}>{k.name}</td>
+                  <td>
+                    <code
+                      style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '3px 8px', borderRadius: 4, cursor: 'pointer' }}
+                      onClick={() => copyKey(k.key)}
+                      title="Click to copy full key"
+                    >{maskKey(k.key)}</code>
+                  </td>
+                  <td>{k.requestCount.toLocaleString()}</td>
+                  <td>{k.totalTokens.toLocaleString()}</td>
+                  <td>{k.lastUsed ? timeAgo(k.lastUsed) : 'Never'}</td>
+                  <td><span style={{ color: k.enabled ? '#10b981' : '#c9a227', fontSize: 12 }}>{k.enabled ? 'Active' : 'Disabled'}</span></td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => copyKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: copiedKey === k.key ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)' }}>
+                      {copiedKey === k.key ? 'Copied' : 'Copy'}
+                    </button>
+                    <button onClick={() => toggleKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px' }}>{k.enabled ? 'Disable' : 'Enable'}</button>
+                    <button onClick={() => deleteKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: 'rgba(239,68,68,0.2)', color: '#ef4444' }}>Revoke</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Usage Summary */}
+      {gatewayKeys.length > 0 && (
+        <div style={{ ...cardStyle, marginTop: 24, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          <div><span style={{ color: '#888', fontSize: 12 }}>Total Keys</span><br /><span style={{ fontSize: 20, color: '#d4a843' }}>{gatewayKeys.length}</span></div>
+          <div><span style={{ color: '#888', fontSize: 12 }}>Active</span><br /><span style={{ fontSize: 20, color: '#10b981' }}>{gatewayKeys.filter(k => k.enabled).length}</span></div>
+          <div><span style={{ color: '#888', fontSize: 12 }}>Total Requests</span><br /><span style={{ fontSize: 20, color: '#d4a843' }}>{gatewayKeys.reduce((s, k) => s + k.requestCount, 0).toLocaleString()}</span></div>
+          <div><span style={{ color: '#888', fontSize: 12 }}>Total Tokens</span><br /><span style={{ fontSize: 20, color: '#d4a843' }}>{gatewayKeys.reduce((s, k) => s + k.totalTokens, 0).toLocaleString()}</span></div>
+        </div>
+      )}
     </div>
   );
 }
