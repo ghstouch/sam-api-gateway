@@ -737,9 +737,9 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.12)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
               >
-                <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                  {/* Left: Icon - vertically centered with full content */}
-                  <div style={{ width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(212,168,67,0.3)', background: 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'stretch' }}>
+                  {/* Left: Icon - vertically centered with full card */}
+                  <div style={{ width: 44, borderRadius: 10, border: '1.5px solid rgba(212,168,67,0.3)', background: 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'center' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={22} height={22} fill="#d4a843">
                       <g dangerouslySetInnerHTML={{ __html: logoSvg }} />
                     </svg>
@@ -758,8 +758,8 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                     <span style={{ display: 'inline-block', fontSize: 11, background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '4px 14px', color: '#aaa', width: 'fit-content' }}>{a.apiType || 'Chat'}</span>
                   </div>
 
-                  {/* Right: Toggle - vertically centered with name+status area */}
-                  <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                  {/* Right: Toggle - vertically centered with full card */}
+                  <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, alignSelf: 'center' }}>
                     <div onClick={e => { e.stopPropagation(); toggleAccount(a.id, { enabled: !a.enabled }); }}
                       style={{ width: 40, height: 22, borderRadius: 11, background: a.enabled ? '#dc3545' : '#2a2a2a', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${a.enabled ? 'rgba(220,53,69,0.4)' : 'rgba(255,255,255,0.08)'}` }}>
                       <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 1, left: a.enabled ? 19 : 1, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
