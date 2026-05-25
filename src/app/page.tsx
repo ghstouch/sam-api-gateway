@@ -63,14 +63,14 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0a0a, #1a0505, #0a0a0a)' }}>
-      <form onSubmit={handleLogin} style={{ background: 'rgba(20,5,5,0.8)', backdropFilter: 'blur(20px)', border: '1px solid #dc2626', boxShadow: '0 0 30px rgba(16,185,129,0.1)', borderRadius: 16, padding: 40, width: 360 }}>
-        <h1 style={{ color: '#dc2626', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>SAM Gateway</h1>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0a0a, #1a0f00, #0a0a0a)' }}>
+      <form onSubmit={handleLogin} style={{ background: 'rgba(20,5,5,0.8)', backdropFilter: 'blur(20px)', border: '1px solid #d4a843', boxShadow: '0 0 30px rgba(16,185,129,0.1)', borderRadius: 16, padding: 40, width: 360 }}>
+        <h1 style={{ color: '#d4a843', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>SAM Gateway</h1>
         <p style={{ color: '#6ee7b7', textAlign: 'center', marginBottom: 24, fontSize: 14, fontWeight: 'bold' }}>Multi Provider Gateway</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
           <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" style={{ ...inputStyle, width: '100%' }} />
           <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Password" style={{ ...inputStyle, width: '100%' }} />
-          {error && <p style={{ color: '#ef4444', fontSize: 13, width: '100%' }}>{error}</p>}
+          {error && <p style={{ color: '#c9a227', fontSize: 13, width: '100%' }}>{error}</p>}
           <button type="submit" disabled={loading} style={{ ...btnStyle, width: '100%' }}>{loading ? 'Logging in...' : 'Login'}</button>
         </div>
       </form>
@@ -135,9 +135,9 @@ export default function Dashboard() {
   ] as const;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a0a0a, #1a0505, #0a0a0a)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a0a0a, #1a0f00, #0a0a0a)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <header style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(220,38,38,0.3)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(212,168,67,0.3)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontSize: 20, margin: 0 }}>SAM Gateway</h1>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           {msg && <span style={{ color: '#4ade80', fontSize: 13 }}>{msg}</span>}
@@ -146,12 +146,12 @@ export default function Dashboard() {
       </header>
 
       {/* Tabs */}
-      <nav style={{ display: 'flex', gap: 4, padding: '12px 24px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(220,38,38,0.15)' }}>
+      <nav style={{ display: 'flex', gap: 4, padding: '12px 24px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(212,168,67,0.15)' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             ...btnStyle, padding: '8px 16px', fontSize: 13,
             background: tab === t.id ? 'rgba(16,185,129,0.3)' : 'transparent',
-            border: tab === t.id ? '1px solid rgba(220,38,38,0.5)' : '1px solid transparent',
+            border: tab === t.id ? '1px solid rgba(212,168,67,0.5)' : '1px solid transparent',
           }}>{t.label}</button>
         ))}
       </nav>
@@ -204,7 +204,7 @@ function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
                 <td>{a.name}</td>
                 <td>{a.authMethod}</td>
                 <td>{a.requestCount}</td>
-                <td><span style={{ color: a.enabled ? '#4ade80' : '#ef4444' }}>{a.enabled ? 'Active' : 'Disabled'}</span></td>
+                <td><span style={{ color: a.enabled ? '#4ade80' : '#c9a227' }}>{a.enabled ? 'Active' : 'Disabled'}</span></td>
               </tr>
             ))}
             {accounts.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: '#666' }}>No accounts configured</td></tr>}
@@ -296,10 +296,10 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                 <td>{a.authMethod}</td>
                 <td>{a.priority}</td>
                 <td>{a.requestCount}</td>
-                <td><span style={{ color: a.enabled ? '#4ade80' : '#ef4444' }}>{a.enabled ? 'OK' : 'NO'}</span></td>
+                <td><span style={{ color: a.enabled ? '#4ade80' : '#c9a227' }}>{a.enabled ? 'OK' : 'NO'}</span></td>
                 <td style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
-                  <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(239,68,68,0.2)' }}>Delete</button>
+                  <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(201,162,39,0.2)' }}>Delete</button>
                 </td>
               </tr>
             ))}
@@ -359,11 +359,11 @@ function KeysTab({ gatewayKeys, onReload, showMsg }: {
                 </td>
                 <td>{k.requestCount}</td>
                 <td>{k.lastUsed ? new Date(k.lastUsed).toLocaleString() : 'Never'}</td>
-                <td><span style={{ color: k.enabled ? '#4ade80' : '#ef4444' }}>{k.enabled ? 'OK' : 'NO'}</span></td>
+                <td><span style={{ color: k.enabled ? '#4ade80' : '#c9a227' }}>{k.enabled ? 'OK' : 'NO'}</span></td>
                 <td style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => { navigator.clipboard.writeText(k.key); showMsg('Copied!'); }} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>Copy</button>
                   <button onClick={() => toggleKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>{k.enabled ? 'Disable' : 'Enable'}</button>
-                  <button onClick={() => deleteKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(239,68,68,0.2)' }}>Revoke</button>
+                  <button onClick={() => deleteKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(201,162,39,0.2)' }}>Revoke</button>
                 </td>
               </tr>
             ))}
@@ -416,10 +416,10 @@ function OAuthTab({ providers, oauthTokens, onReload, showMsg }: {
                   <td>{t.provider}</td>
                   <td><code style={{ fontSize: 11 }}>{t.id.slice(0, 8)}...</code></td>
                   <td><code style={{ fontSize: 11 }}>{t.accessToken}</code></td>
-                  <td style={{ color: expired ? '#ef4444' : '#4ade80' }}>{new Date(t.expiresAt).toLocaleString()}</td>
-                  <td><span style={{ color: expired ? '#ef4444' : t.enabled ? '#4ade80' : '#888' }}>{expired ? 'Expired' : t.enabled ? 'Valid' : 'Disabled'}</span></td>
+                  <td style={{ color: expired ? '#c9a227' : '#4ade80' }}>{new Date(t.expiresAt).toLocaleString()}</td>
+                  <td><span style={{ color: expired ? '#c9a227' : t.enabled ? '#4ade80' : '#888' }}>{expired ? 'Expired' : t.enabled ? 'Valid' : 'Disabled'}</span></td>
                   <td>
-                    <button onClick={() => deleteToken(t.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(239,68,68,0.2)' }}>Delete</button>
+                    <button onClick={() => deleteToken(t.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(201,162,39,0.2)' }}>Delete</button>
                   </td>
                 </tr>
               );
@@ -543,13 +543,13 @@ Client C|60`,
           <h3 style={{ fontSize: 14, marginBottom: 8 }}>Import Result</h3>
           <div style={{ display: 'flex', gap: 24 }}>
             <span style={{ color: '#4ade80' }}>OK Success: {batchResult.success}</span>
-            {batchResult.failed > 0 && <span style={{ color: '#ef4444' }}>NO Failed: {batchResult.failed}</span>}
+            {batchResult.failed > 0 && <span style={{ color: '#c9a227' }}>NO Failed: {batchResult.failed}</span>}
           </div>
           {batchResult.errors?.length > 0 && (
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 12, color: '#ef4444', marginBottom: 4 }}>Errors:</div>
+              <div style={{ fontSize: 12, color: '#c9a227', marginBottom: 4 }}>Errors:</div>
               {batchResult.errors.map((e: string, i: number) => (
-                <div key={i} style={{ fontSize: 12, color: '#ef4444', marginLeft: 8 }}>• {e}</div>
+                <div key={i} style={{ fontSize: 12, color: '#c9a227', marginLeft: 8 }}>• {e}</div>
               ))}
             </div>
           )}
@@ -561,7 +561,7 @@ Client C|60`,
         <h3 style={{ fontSize: 14, marginBottom: 8 }}>Available Providers</h3>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {providers.map(p => (
-            <span key={p.id} style={{ background: 'rgba(220,38,38,0.15)', padding: '4px 10px', borderRadius: 6, fontSize: 12, border: '1px solid rgba(220,38,38,0.2)' }}>
+            <span key={p.id} style={{ background: 'rgba(212,168,67,0.15)', padding: '4px 10px', borderRadius: 6, fontSize: 12, border: '1px solid rgba(212,168,67,0.2)' }}>
               {p.icon} {p.id}
             </span>
           ))}
@@ -574,7 +574,7 @@ Client C|60`,
 // ─── Shared Styles ───
 const inputStyle: React.CSSProperties = {
   background: 'rgba(0,0,0,0.4)',
-  border: '1px solid rgba(220,38,38,0.3)',
+  border: '1px solid rgba(212,168,67,0.3)',
   borderRadius: 8,
   padding: '8px 12px',
   color: '#eee',
@@ -594,7 +594,7 @@ const btnStyle: React.CSSProperties = {
 
 const cardStyle: React.CSSProperties = {
   background: 'rgba(0,0,0,0.3)',
-  border: '1px solid rgba(220,38,38,0.2)',
+  border: '1px solid rgba(212,168,67,0.2)',
   borderRadius: 12,
   padding: 20,
 };
