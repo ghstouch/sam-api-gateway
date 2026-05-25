@@ -601,11 +601,34 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
-  // Group accounts by provider
-  const providerGroups = providers.map(p => ({
-    ...p,
-    accounts: accounts.filter(a => a.provider === p.id),
-  }));
+  // Group accounts by provider — only show providers that have accounts
+  const providerGroups = (() => {
+    const groups: Record<string, { id: string; name: string; icon: string; models: string[]; authMethods: string[]; accounts: ProviderAccount[]; baseUrl?: string }> = {};
+    // First, add pre-configured providers that have accounts
+    for (const p of providers) {
+      const accts = accounts.filter(a => a.provider === p.id);
+      if (accts.length > 0) {
+        groups[p.id] = { ...p, accounts: accts };
+      }
+    }
+    // Then, add any accounts whose provider isn't in the pre-configured list
+    for (const a of accounts) {
+      if (!groups[a.provider]) {
+        groups[a.provider] = {
+          id: a.provider,
+          name: a.provider.charAt(0).toUpperCase() + a.provider.slice(1),
+          icon: '🔗',
+          models: [],
+          authMethods: ['apikey'],
+          accounts: [],
+        };
+      }
+      if (!groups[a.provider].accounts.find(x => x.id === a.id)) {
+        groups[a.provider].accounts.push(a);
+      }
+    }
+    return Object.values(groups);
+  })();
 
   async function addAccount(e: React.FormEvent) {
     e.preventDefault();
@@ -739,6 +762,12 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
       </div>
 
       {/* Provider Cards Grid */}
+      {providerGroups.length === 0 ? (
+        <div style={{ ...cardStyle, textAlign: 'center', padding: '48px 24px', color: '#666' }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>No providers yet</div>
+          <div style={{ fontSize: 14, color: '#555' }}>Click "+ Add Account" to add your first provider.</div>
+        </div>
+      ) : (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
         {providerGroups.map(pg => (
           <div
@@ -769,6 +798,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
           </div>
         ))}
       </div>
+      )}
 
       {/* Add Account Modal */}
       {showModal && (
