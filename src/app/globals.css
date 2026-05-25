@@ -12,13 +12,13 @@ body {
 
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-::-webkit-scrollbar-thumb { background: rgba(220,38,38,0.3); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.3); border-radius: 4px; }
 
 table th {
   text-align: left;
   padding: 10px 12px;
   background: rgba(0,0,0,0.3);
-  border-bottom: 1px solid rgba(220,38,38,0.15);
+  border-bottom: 1px solid rgba(212,168,67,0.15);
   font-weight: 600;
   color: #aaa;
   font-size: 12px;
@@ -27,20 +27,20 @@ table th {
 
 table td {
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(220,38,38,0.08);
+  border-bottom: 1px solid rgba(212,168,67,0.08);
 }
 
 table tr:hover td {
-  background: rgba(16,185,129,0.05);
+  background: rgba(212,168,67,0.05);
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: rgba(16,185,129,0.5);
-  box-shadow: 0 0 0 2px rgba(16,185,129,0.1);
+  border-color: rgba(212,168,67,0.5);
+  box-shadow: 0 0 0 2px rgba(212,168,67,0.1);
 }
 
-button:hover {
-  background: rgba(16,185,129,0.25) !important;
+button:not(.tab-btn):hover {
+  background: rgba(212,168,67,0.15) !important;
 }
 
 a:hover {

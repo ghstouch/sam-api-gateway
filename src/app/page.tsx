@@ -254,6 +254,7 @@ export default function Dashboard() {
           const isActive = tab === t.id;
           return (
             <button
+              className="tab-btn"
               key={t.id}
               onClick={() => setTab(t.id)}
               onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = '#d4a843'; }}
@@ -264,12 +265,15 @@ export default function Dashboard() {
                 fontWeight: isActive ? 700 : 500,
                 background: 'none',
                 border: 'none',
+                outline: 'none',
+                boxShadow: 'none',
                 borderBottom: isActive ? '2px solid #d4a843' : '2px solid transparent',
                 color: isActive ? '#d4a843' : '#888',
                 cursor: 'pointer',
                 borderRadius: 0,
                 whiteSpace: 'nowrap',
                 transition: 'all 0.2s',
+                fontFamily: 'inherit',
               }}
             >{t.label}</button>
           );
