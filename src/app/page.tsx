@@ -737,9 +737,9 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.12)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
               >
-                <div style={{ display: 'flex', gap: 14 }}>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
                   {/* Left: Icon - vertically centered with full content */}
-                  <div style={{ width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(212,168,67,0.3)', background: 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'center' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(212,168,67,0.3)', background: 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={22} height={22} fill="#d4a843">
                       <g dangerouslySetInnerHTML={{ __html: logoSvg }} />
                     </svg>
