@@ -374,7 +374,7 @@ function OAuthTab({ providers, oauthTokens, onReload, showMsg }: {
         <h3 style={{ fontSize: 14, marginBottom: 12 }}>Connect OAuth Provider</h3>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {oauthProviders.map(p => (
-            <a key={p.id} href={`/api/auth/authorize?provider=${p.id}`} style={{
+            <a key={p.id} href={`/api/auth/authorize?provider=${p.id}`} target="_blank" rel="noopener noreferrer" style={{
               ...btnStyle, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8,
             }}>
               <span>{p.icon}</span> Connect {p.name}
