@@ -737,9 +737,9 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
               >
-                <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                  {/* Left: White logo icon */}
-                  <div style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  {/* Left: White logo icon - stretch to match center height */}
+                  <div style={{ width: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={28} height={28} fill="#fff" style={{ opacity: 0.85 }}>
                       <g dangerouslySetInnerHTML={{ __html: logoSvg }} />
                     </svg>
@@ -757,8 +757,8 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                     <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.06)', borderRadius: 6, padding: '3px 10px', color: '#aaa', width: 'fit-content' }}>{a.apiType || 'Chat'}</span>
                   </div>
 
-                  {/* Right: Orange dot + toggle */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0, alignSelf: 'center' }}>
+                  {/* Right: Orange dot + toggle - stretch to match center height */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.enabled ? '#ff9900' : '#333' }} />
                     <div onClick={e => { e.stopPropagation(); toggleAccount(a.id, { enabled: !a.enabled }); }}
                       style={{ width: 40, height: 22, borderRadius: 11, background: a.enabled ? '#dc3545' : '#333', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${a.enabled ? 'rgba(220,53,69,0.4)' : 'rgba(255,255,255,0.1)'}` }}>
