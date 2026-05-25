@@ -591,11 +591,20 @@ function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
   );
 }
 
-// ─── Providers Tab ───
+// ─── Providers Tab (OmniRoute-style) ───
 function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   providers: Provider[]; accounts: ProviderAccount[]; onReload: () => void; showMsg: (m: string) => void;
 }) {
-  const [form, setForm] = useState({ provider: '', name: '', authMethod: 'apikey' as 'apikey' | 'oauth', apiKey: '', baseUrl: '', priority: '0', rateLimit: '0' });
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  const [form, setForm] = useState({ provider: '', name: '', authMethod: 'apikey' as 'apikey' | 'oauth', apiKey: '', baseUrl: '', apiType: 'chat', priority: '0', rateLimit: '0' });
+  const [checking, setChecking] = useState(false);
+
+  // Group accounts by provider
+  const providerGroups = providers.map(p => ({
+    ...p,
+    accounts: accounts.filter(a => a.provider === p.id),
+  }));
 
   async function addAccount(e: React.FormEvent) {
     e.preventDefault();
@@ -603,12 +612,16 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
     if (form.authMethod === 'apikey') data.apiKey = form.apiKey;
     if (form.baseUrl.trim()) data.baseUrl = form.baseUrl.trim();
     const res = await api('/api/admin/providers', { method: 'POST', body: JSON.stringify(data) });
-    if (res.account) { showMsg('Account added!'); setForm({ ...form, name: '', apiKey: '', baseUrl: '' }); onReload(); }
-    else showMsg('Error: ' + (res.error || 'Failed'));
+    if (res.account) {
+      showMsg('Account added!');
+      setForm({ provider: '', name: '', authMethod: 'apikey', apiKey: '', baseUrl: '', apiType: 'chat', priority: '0', rateLimit: '0' });
+      setShowModal(false);
+      onReload();
+    } else showMsg('Error: ' + (res.error || 'Failed'));
   }
 
   async function deleteAccount(id: string) {
-    if (!confirm('Delete this account?')) return;
+    if (!confirm('Delete this connection?')) return;
     await api('/api/admin/providers', { method: 'DELETE', body: JSON.stringify({ id }) });
     showMsg('Deleted'); onReload();
   }
@@ -618,67 +631,217 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
     showMsg('Updated'); onReload();
   }
 
+  async function checkKey() {
+    if (!form.apiKey || !form.baseUrl) { showMsg('Need API key + base URL to check'); return; }
+    setChecking(true);
+    try {
+      const res = await fetch(form.baseUrl + '/models', { headers: { 'Authorization': 'Bearer ' + form.apiKey } });
+      if (res.ok) showMsg('Key valid! Connected.');
+      else showMsg('Key invalid or endpoint unreachable (' + res.status + ')');
+    } catch { showMsg('Connection failed'); }
+    setChecking(false);
+  }
+
   function maskKey(key: string) {
     if (!key) return '-';
     if (key.length <= 10) return key;
     return key.slice(0, 6) + '...' + key.slice(-4);
   }
 
+  function openAddModal(providerId?: string) {
+    setForm(f => ({ ...f, provider: providerId || '', name: '', apiKey: '', baseUrl: '' }));
+    setShowModal(true);
+  }
+
+  // Detail view for a specific provider
+  if (selectedProvider) {
+    const pg = providerGroups.find(p => p.id === selectedProvider);
+    if (!pg) { setSelectedProvider(null); return null; }
+
+    return (
+      <div>
+        {/* Back button */}
+        <button onClick={() => setSelectedProvider(null)} style={{ ...btnStyle, marginBottom: 16, fontSize: 13 }}>
+          Back to Providers
+        </button>
+
+        {/* Provider header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+          <span style={{ fontSize: 32 }}>{pg.icon}</span>
+          <div>
+            <h2 style={{ fontSize: 22, margin: 0 }}>{pg.name}</h2>
+            <p style={{ color: '#888', margin: 0, fontSize: 13 }}>{pg.accounts.length} connection{pg.accounts.length !== 1 ? 's' : ''}</p>
+          </div>
+          <button onClick={() => openAddModal(pg.id)} style={{ ...btnStyle, marginLeft: 'auto', background: 'linear-gradient(135deg, #d4a843, #c9a227)', color: '#0a0a0a', fontWeight: 600 }}>
+            + Add Key
+          </button>
+        </div>
+
+        {/* Endpoint info */}
+        <div style={{ ...cardStyle, marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <span style={{ color: '#888', fontSize: 12 }}>ENDPOINT</span>
+            <code style={{ fontSize: 13, color: '#d4a843' }}>{pg.baseUrl || 'https://api.' + pg.id + '.com/v1'}/chat/completions</code>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {pg.models.map(m => (
+              <span key={m} style={{ fontSize: 11, background: 'rgba(212,168,67,0.1)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 6, padding: '3px 10px', color: '#d4a843' }}>{m}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Connections */}
+        <h3 style={{ fontSize: 16, marginBottom: 12 }}>Connections</h3>
+        {pg.accounts.length === 0 ? (
+          <div style={{ ...cardStyle, textAlign: 'center', color: '#666', padding: 32 }}>
+            No connections yet. Click "+ Add Key" to add one.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {pg.accounts.map((a, i) => (
+              <div key={a.id} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px' }}>
+                <span style={{ color: a.enabled ? '#10b981' : '#c9a227', fontSize: 10 }}>●</span>
+                <span style={{ color: '#888', fontSize: 12, minWidth: 20 }}>#{i + 1}</span>
+                <span style={{ fontWeight: 500, fontSize: 14, flex: 1 }}>{a.name}</span>
+                {a.apiKey && <code style={{ fontSize: 11, color: '#888' }}>{maskKey(a.apiKey)}</code>}
+                <span style={{ fontSize: 11, color: '#888' }}>{a.requestCount.toLocaleString()} req</span>
+                <span style={{ fontSize: 11, color: a.enabled ? '#10b981' : '#c9a227' }}>{a.enabled ? 'Active' : 'Disabled'}</span>
+                <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
+                <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Delete</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Cards grid view
   return (
     <div>
-      <h2 style={{ fontSize: 18, marginBottom: 16 }}>Provider Accounts</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <h2 style={{ fontSize: 18, margin: 0 }}>Providers</h2>
+        <button onClick={() => openAddModal()} style={{ ...btnStyle, background: 'linear-gradient(135deg, #d4a843, #c9a227)', color: '#0a0a0a', fontWeight: 600 }}>
+          + Add Account
+        </button>
+      </div>
 
-      {/* Add Account Form */}
-      <form onSubmit={addAccount} style={{ ...cardStyle, marginBottom: 24 }}>
-        <h3 style={{ fontSize: 14, marginBottom: 12 }}>Add Account</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-          <select value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })} style={inputStyle} required>
-            <option value="">Select Provider</option>
-            {providers.map(p => <option key={p.id} value={p.id}>{p.icon} {p.name}</option>)}
-          </select>
-          <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Account name" style={inputStyle} required />
-          <select value={form.authMethod} onChange={e => setForm({ ...form, authMethod: e.target.value as any })} style={inputStyle}>
-            <option value="apikey">API Key</option>
-            <option value="oauth">OAuth</option>
-          </select>
-          {form.authMethod === 'apikey' && (
-            <input value={form.apiKey} onChange={e => setForm({ ...form, apiKey: e.target.value })} placeholder="API Key" style={inputStyle} required />
-          )}
-          <input value={form.baseUrl} onChange={e => setForm({ ...form, baseUrl: e.target.value })} placeholder="Base URL (optional, e.g. https://api.openai.com/v1)" style={inputStyle} />
-          <input value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })} placeholder="Priority (0=highest)" type="number" style={inputStyle} />
-          <input value={form.rateLimit} onChange={e => setForm({ ...form, rateLimit: e.target.value })} placeholder="Rate limit/min (0=unlimited)" type="number" style={inputStyle} />
-        </div>
-        <button type="submit" style={{ ...btnStyle, marginTop: 12 }}>Add Account</button>
-      </form>
-
-      {/* Accounts List */}
-      {accounts.length === 0 ? (
-        <div style={{ ...cardStyle, textAlign: 'center', color: '#666', padding: 40 }}>
-          No provider accounts. Add one above to start routing requests.
-        </div>
-      ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={tableStyle}>
-            <thead><tr><th>Provider</th><th>Name</th><th>Auth</th><th>Key</th><th>Base URL</th><th>Priority</th><th>Requests</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>
-              {accounts.map(a => (
-                <tr key={a.id}>
-                  <td>{providers.find(p => p.id === a.provider)?.icon} {a.provider}</td>
-                  <td style={{ fontWeight: 500 }}>{a.name}</td>
-                  <td><span style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>{a.authMethod}</span></td>
-                  <td><code style={{ fontSize: 11 }}>{a.apiKey ? maskKey(a.apiKey) : '-'}</code></td>
-                  <td><code style={{ fontSize: 10, color: '#888' }}>{a.baseUrl || providers.find(p => p.id === a.provider)?.baseUrl || '-'}</code></td>
-                  <td>{a.priority}</td>
-                  <td>{a.requestCount.toLocaleString()}</td>
-                  <td><span style={{ color: a.enabled ? '#10b981' : '#c9a227', fontSize: 12 }}>{a.enabled ? 'Active' : 'Disabled'}</span></td>
-                  <td style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
-                    <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: 'rgba(239,68,68,0.2)', color: '#ef4444' }}>Delete</button>
-                  </td>
-                </tr>
+      {/* Provider Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+        {providerGroups.map(pg => (
+          <div
+            key={pg.id}
+            onClick={() => setSelectedProvider(pg.id)}
+            style={{
+              ...cardStyle,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              borderColor: pg.accounts.length > 0 ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.2)',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = pg.accounts.length > 0 ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.2)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 28 }}>{pg.icon}</span>
+              <span style={{ fontSize: 11, color: pg.accounts.length > 0 ? '#10b981' : '#666' }}>
+                {pg.accounts.length > 0 ? `${pg.accounts.length} Connected` : 'Not configured'}
+              </span>
+            </div>
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{pg.name}</div>
+            <div style={{ fontSize: 11, color: '#888' }}>{pg.models.slice(0, 3).join(', ')}{pg.models.length > 3 ? '...' : ''}</div>
+            <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {pg.authMethods.map(m => (
+                <span key={m} style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#888' }}>{m}</span>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add Account Modal */}
+      {showModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000,
+        }} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div style={{
+            background: '#111', border: '1px solid rgba(212,168,67,0.3)',
+            borderRadius: 16, padding: 32, width: '100%', maxWidth: 480,
+            maxHeight: '90vh', overflow: 'auto',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h3 style={{ fontSize: 18, margin: 0 }}>Add Provider Account</h3>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: '#666', fontSize: 20, cursor: 'pointer' }}>×</button>
+            </div>
+
+            <form onSubmit={addAccount} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Provider */}
+              <div>
+                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Provider *</label>
+                <select value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })} style={{ ...inputStyle, width: '100%' }} required>
+                  <option value="">Select provider</option>
+                  {providers.map(p => <option key={p.id} value={p.id}>{p.icon} {p.name}</option>)}
+                </select>
+              </div>
+
+              {/* Name */}
+              <div>
+                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Name *</label>
+                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Production Key" style={{ ...inputStyle, width: '100%' }} required />
+                <span style={{ fontSize: 11, color: '#555' }}>A friendly label for this connection.</span>
+              </div>
+
+              {/* API Type */}
+              <div>
+                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>API Type</label>
+                <select value={form.apiType} onChange={e => setForm({ ...form, apiType: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
+                  <option value="chat">Chat Completions</option>
+                  <option value="responses">Responses API</option>
+                  <option value="embeddings">Embeddings</option>
+                  <option value="audio-transcription">Audio Transcriptions</option>
+                  <option value="audio-speech">Audio Speech</option>
+                  <option value="images">Images Generations</option>
+                </select>
+              </div>
+
+              {/* Base URL */}
+              <div>
+                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Base URL</label>
+                <input value={form.baseUrl} onChange={e => setForm({ ...form, baseUrl: e.target.value })} placeholder="https://api.openai.com/v1" style={{ ...inputStyle, width: '100%' }} />
+                <span style={{ fontSize: 11, color: '#555' }}>Root URL of your API. Leave empty to use provider default.</span>
+              </div>
+
+              {/* API Key + Check */}
+              {form.authMethod === 'apikey' && (
+                <div>
+                  <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>API Key</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input value={form.apiKey} onChange={e => setForm({ ...form, apiKey: e.target.value })} placeholder="sk-..." style={{ ...inputStyle, flex: 1 }} required />
+                    <button type="button" onClick={checkKey} disabled={checking} style={{ ...btnStyle, whiteSpace: 'nowrap', opacity: checking ? 0.5 : 1 }}>
+                      {checking ? 'Checking...' : 'Check'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Auth method toggle */}
+              <div>
+                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Auth Method</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" onClick={() => setForm({ ...form, authMethod: 'apikey' })} style={{ ...btnStyle, flex: 1, background: form.authMethod === 'apikey' ? 'rgba(212,168,67,0.2)' : 'rgba(255,255,255,0.05)', borderColor: form.authMethod === 'apikey' ? '#d4a843' : 'rgba(255,255,255,0.1)' }}>API Key</button>
+                  <button type="button" onClick={() => setForm({ ...form, authMethod: 'oauth' })} style={{ ...btnStyle, flex: 1, background: form.authMethod === 'oauth' ? 'rgba(212,168,67,0.2)' : 'rgba(255,255,255,0.05)', borderColor: form.authMethod === 'oauth' ? '#d4a843' : 'rgba(255,255,255,0.1)' }}>OAuth</button>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                <button type="button" onClick={() => setShowModal(false)} style={{ ...btnStyle, flex: 1, background: 'rgba(255,255,255,0.05)', color: '#888' }}>Cancel</button>
+                <button type="submit" style={{ ...btnStyle, flex: 1, background: 'linear-gradient(135deg, #d4a843, #c9a227)', color: '#0a0a0a', fontWeight: 600 }}>Add</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
