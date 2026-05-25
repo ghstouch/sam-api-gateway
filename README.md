@@ -1,6 +1,6 @@
 # SAM Gateway — Multi-Provider OAuth API Gateway
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ghstouch/oauth-api-gateway)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ghstouch/sam-api-gateway)
 
 ## What is this?
 
@@ -32,8 +32,8 @@ An OpenAI-compatible API gateway that manages multiple provider accounts with OA
 
 ```bash
 # Clone
-git clone https://github.com/ghstouch/oauth-api-gateway
-cd oauth-api-gateway
+git clone https://github.com/ghstouch/sam-api-gateway
+cd sam-api-gateway
 
 # Install
 npm install
