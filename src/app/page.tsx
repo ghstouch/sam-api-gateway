@@ -66,11 +66,13 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0a0a, #1a0505, #0a0a0a)' }}>
       <form onSubmit={handleLogin} style={{ background: 'rgba(20,5,5,0.8)', backdropFilter: 'blur(20px)', border: '1px solid #dc2626', boxShadow: '0 0 30px rgba(16,185,129,0.1)', borderRadius: 16, padding: 40, width: 360 }}>
         <h1 style={{ color: '#dc2626', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>SAM Gateway</h1>
-        <p style={{ color: '#6ee7b7', textAlign: 'center', marginBottom: 24, fontSize: 14 }}>Multi-Provider OAuth API Gateway</p>
-        <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" style={inputStyle} />
-        <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Password" style={inputStyle} />
-        {error && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12 }}>{error}</p>}
-        <button type="submit" disabled={loading} style={{ ...btnStyle, width: '100%' }}>{loading ? 'Logging in...' : 'Login'}</button>
+        <p style={{ color: '#6ee7b7', textAlign: 'center', marginBottom: 24, fontSize: 14, fontWeight: 'bold' }}>Multi Provider Gateway</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+          <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" style={{ ...inputStyle, width: '100%' }} />
+          <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Password" style={{ ...inputStyle, width: '100%' }} />
+          {error && <p style={{ color: '#ef4444', fontSize: 13, width: '100%' }}>{error}</p>}
+          <button type="submit" disabled={loading} style={{ ...btnStyle, width: '100%' }}>{loading ? 'Logging in...' : 'Login'}</button>
+        </div>
       </form>
     </div>
   );
