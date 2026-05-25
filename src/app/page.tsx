@@ -95,7 +95,7 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
           lineHeight: 1.1,
         }}>SAM Gateway</h1>
         <p style={{
-          color: '#6ee7b7',
+          color: '#d4a843',
           fontSize: 'clamp(14px, 2.5vw, 18px)',
           fontWeight: 600,
           marginBottom: 40,
@@ -228,7 +228,7 @@ export default function Dashboard() {
       }}>
         <h1 style={{ fontSize: 22, margin: 0, fontWeight: 800, color: '#d4a843', letterSpacing: '-0.01em' }}>SAM Gateway</h1>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          {msg && <span style={{ color: '#4ade80', fontSize: 13, fontWeight: 500 }}>{msg}</span>}
+          {msg && <span style={{ color: '#d4a843', fontSize: 13, fontWeight: 500 }}>{msg}</span>}
           <button onClick={() => { localStorage.removeItem('sam_token'); setToken(null); }} style={{
             ...btnStyle,
             fontSize: 13,
@@ -308,7 +308,7 @@ function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
             <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
             <div style={{ fontSize: 32, fontWeight: 700 }}>{s.value}</div>
             <div style={{ color: '#888', fontSize: 13 }}>{s.label}</div>
-            {s.sub && <div style={{ color: '#4ade80', fontSize: 12, marginTop: 4 }}>{s.sub}</div>}
+            {s.sub && <div style={{ color: '#d4a843', fontSize: 12, marginTop: 4 }}>{s.sub}</div>}
           </div>
         ))}
       </div>
@@ -324,7 +324,7 @@ function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
                 <td>{a.name}</td>
                 <td>{a.authMethod}</td>
                 <td>{a.requestCount}</td>
-                <td><span style={{ color: a.enabled ? '#4ade80' : '#c9a227' }}>{a.enabled ? 'Active' : 'Disabled'}</span></td>
+                <td><span style={{ color: a.enabled ? '#d4a843' : '#c9a227' }}>{a.enabled ? 'Active' : 'Disabled'}</span></td>
               </tr>
             ))}
             {accounts.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: '#666' }}>No accounts configured</td></tr>}
@@ -416,7 +416,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                 <td>{a.authMethod}</td>
                 <td>{a.priority}</td>
                 <td>{a.requestCount}</td>
-                <td><span style={{ color: a.enabled ? '#4ade80' : '#c9a227' }}>{a.enabled ? 'OK' : 'NO'}</span></td>
+                <td><span style={{ color: a.enabled ? '#d4a843' : '#c9a227' }}>{a.enabled ? 'OK' : 'NO'}</span></td>
                 <td style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
                   <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(201,162,39,0.2)' }}>Delete</button>
@@ -479,7 +479,7 @@ function KeysTab({ gatewayKeys, onReload, showMsg }: {
                 </td>
                 <td>{k.requestCount}</td>
                 <td>{k.lastUsed ? new Date(k.lastUsed).toLocaleString() : 'Never'}</td>
-                <td><span style={{ color: k.enabled ? '#4ade80' : '#c9a227' }}>{k.enabled ? 'OK' : 'NO'}</span></td>
+                <td><span style={{ color: k.enabled ? '#d4a843' : '#c9a227' }}>{k.enabled ? 'OK' : 'NO'}</span></td>
                 <td style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => { navigator.clipboard.writeText(k.key); showMsg('Copied!'); }} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>Copy</button>
                   <button onClick={() => toggleKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>{k.enabled ? 'Disable' : 'Enable'}</button>
@@ -536,8 +536,8 @@ function OAuthTab({ providers, oauthTokens, onReload, showMsg }: {
                   <td>{t.provider}</td>
                   <td><code style={{ fontSize: 11 }}>{t.id.slice(0, 8)}...</code></td>
                   <td><code style={{ fontSize: 11 }}>{t.accessToken}</code></td>
-                  <td style={{ color: expired ? '#c9a227' : '#4ade80' }}>{new Date(t.expiresAt).toLocaleString()}</td>
-                  <td><span style={{ color: expired ? '#c9a227' : t.enabled ? '#4ade80' : '#888' }}>{expired ? 'Expired' : t.enabled ? 'Valid' : 'Disabled'}</span></td>
+                  <td style={{ color: expired ? '#c9a227' : '#d4a843' }}>{new Date(t.expiresAt).toLocaleString()}</td>
+                  <td><span style={{ color: expired ? '#c9a227' : t.enabled ? '#d4a843' : '#888' }}>{expired ? 'Expired' : t.enabled ? 'Valid' : 'Disabled'}</span></td>
                   <td>
                     <button onClick={() => deleteToken(t.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(201,162,39,0.2)' }}>Delete</button>
                   </td>
@@ -662,7 +662,7 @@ Client C|60`,
         <div style={{ ...cardStyle, marginTop: 16 }}>
           <h3 style={{ fontSize: 14, marginBottom: 8 }}>Import Result</h3>
           <div style={{ display: 'flex', gap: 24 }}>
-            <span style={{ color: '#4ade80' }}>OK Success: {batchResult.success}</span>
+            <span style={{ color: '#d4a843' }}>OK Success: {batchResult.success}</span>
             {batchResult.failed > 0 && <span style={{ color: '#c9a227' }}>NO Failed: {batchResult.failed}</span>}
           </div>
           {batchResult.errors?.length > 0 && (
