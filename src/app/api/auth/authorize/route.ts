@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
   }
 
   const clientId = process.env[provider.oauth.clientIdEnv] || '';
-  const redirectUri = `${req.nextUrl.origin}${provider.oauth.redirectPath}`;
+  // Always use localhost for redirect — portproxy routes to WSL
+  const redirectUri = `http://localhost:1234${provider.oauth.redirectPath}`;
   const state = randomUUID();
 
   const authUrl = new URL(provider.oauth.authorizeUrl);
