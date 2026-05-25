@@ -6,3 +6,4 @@ node_modules/
 next-env.d.ts
 .vercel
 .env
+DEV_WORK_LOG.md
