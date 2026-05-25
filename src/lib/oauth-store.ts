@@ -63,8 +63,8 @@ const oauthTokens: Map<string, OAuthToken> = new Map();
 const providerAccounts: Map<string, ProviderAccount> = new Map();
 
 // ─── Redis helpers ───
-const OAUTH_TOKENS_KEY = 'ogw:oauth_tokens';
-const PROVIDER_ACCOUNTS_KEY = 'ogw:provider_accounts';
+const OAUTH_TOKENS_KEY = 'sam:oauth_tokens';
+const PROVIDER_ACCOUNTS_KEY = 'sam:provider_accounts';
 
 async function redisSet(prefix: string, key: string, value: any): Promise<void> {
   const r = await getRedis();

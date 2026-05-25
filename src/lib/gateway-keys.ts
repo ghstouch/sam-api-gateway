@@ -16,7 +16,7 @@ export interface GatewayApiKey {
 
 // In-memory store
 const keys: Map<string, GatewayApiKey> = new Map();
-const DEFAULT_KEY = 'ogw-default-000000000000000000000000';
+const DEFAULT_KEY = 'sam_default_000000000000000000000000';
 
 // Seed default key
 if (!keys.has(DEFAULT_KEY)) {

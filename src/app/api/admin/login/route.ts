@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       token_type: 'Bearer',
     });
 
-    response.cookies.set('ogw_session', token, {
+    response.cookies.set('sam_session', token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',

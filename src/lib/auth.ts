@@ -45,7 +45,7 @@ export async function getAuthFromRequest(req: Request): Promise<boolean> {
 
   const cookieHeader = req.headers.get('cookie');
   if (cookieHeader) {
-    const match = cookieHeader.match(/ogw_session=([^;]+)/);
+    const match = cookieHeader.match(/sam_session=([^;]+)/);
     if (match) {
       const payload = await verifyToken(match[1]);
       return payload !== null;
