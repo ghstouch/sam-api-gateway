@@ -63,8 +63,8 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #064e3b, #0f5132, #022c22)' }}>
-      <form onSubmit={handleLogin} style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 40, width: 360 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1a0000, #2d0a0a, #1a0505)' }}>
+      <form onSubmit={handleLogin} style={{ background: 'rgba(45,10,10,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: 40, width: 360 }}>
         <h1 style={{ color: '#fff', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>SAM Gateway</h1>
         <p style={{ color: '#888', textAlign: 'center', marginBottom: 24, fontSize: 14 }}>Multi-Provider OAuth API Gateway</p>
         <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" style={inputStyle} />
@@ -133,7 +133,7 @@ export default function Dashboard() {
   ] as const;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #064e3b, #0f5132, #022c22)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1a0000, #2d0a0a, #1a0505)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <header style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontSize: 20, margin: 0 }}>SAM Gateway</h1>
@@ -585,7 +585,7 @@ const btnStyle: React.CSSProperties = {
 };
 
 const cardStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
+  background: 'rgba(255,255,255,0.02)',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: 12,
   padding: 20,
