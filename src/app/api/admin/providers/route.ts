@@ -14,12 +14,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!(await getAuthFromRequest(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const data = await req.json();
-  if (!data.provider || !data.name || !data.authMethod) {
-    return NextResponse.json({ error: 'Missing required fields: provider, name, authMethod' }, { status: 400 });
+  if (!data.provider || !data.name) {
+    return NextResponse.json({ error: 'Missing required fields: provider, name' }, { status: 400 });
   }
-  if (!PROVIDERS[data.provider]) {
-    return NextResponse.json({ error: `Unknown provider: ${data.provider}` }, { status: 400 });
-  }
+  // Default authMethod to 'apikey' if not provided
+  if (!data.authMethod) data.authMethod = 'apikey';
   const account = await createProviderAccount(data);
   return NextResponse.json({ account }, { status: 201 });
 }

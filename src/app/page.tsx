@@ -609,13 +609,15 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
 
   async function addAccount(e: React.FormEvent) {
     e.preventDefault();
-    const data: any = { provider: form.provider, name: form.name, authMethod: form.authMethod, priority: parseInt(form.priority) || 0, rateLimit: parseInt(form.rateLimit) || 0 };
-    if (form.authMethod === 'apikey') data.apiKey = form.apiKey;
+    // Auto-generate provider ID from name (kebab-case, lowercase)
+    const providerId = form.provider.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const data: any = { provider: providerId, name: form.name, authMethod: 'apikey', priority: 0, rateLimit: 0, apiKey: form.apiKey };
     if (form.baseUrl.trim()) data.baseUrl = form.baseUrl.trim();
     const res = await api('/api/admin/providers', { method: 'POST', body: JSON.stringify(data) });
     if (res.account) {
       showMsg('Account added!');
       setForm({ provider: '', name: '', authMethod: 'apikey', apiKey: '', baseUrl: '', apiType: 'chat', priority: '0', rateLimit: '0' });
+      setCheckResult(null);
       setShowModal(false);
       onReload();
     } else showMsg('Error: ' + (res.error || 'Failed'));
