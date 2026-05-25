@@ -250,21 +250,30 @@ export default function Dashboard() {
         borderBottom: '1px solid rgba(212,168,67,0.1)',
         overflowX: 'auto',
       }}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            ...btnStyle,
-            padding: '16px 20px',
-            fontSize: 14,
-            fontWeight: tab === t.id ? 700 : 500,
-            background: 'transparent',
-            border: 'none',
-            borderBottom: tab === t.id ? '2px solid #d4a843' : '2px solid transparent',
-            color: tab === t.id ? '#d4a843' : '#888',
-            borderRadius: 0,
-            whiteSpace: 'nowrap',
-            transition: 'all 0.2s',
-          }}>{t.label}</button>
-        ))}
+        {tabs.map(t => {
+          const isActive = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = '#d4a843'; }}
+              onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = '#888'; }}
+              style={{
+                ...btnStyle,
+                padding: '16px 20px',
+                fontSize: 14,
+                fontWeight: isActive ? 700 : 500,
+                background: 'transparent',
+                border: 'none',
+                borderBottom: isActive ? '2px solid #d4a843' : '2px solid transparent',
+                color: isActive ? '#d4a843' : '#888',
+                borderRadius: 0,
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s',
+              }}
+            >{t.label}</button>
+          );
+        })}
       </nav>
 
       {/* Content */}
