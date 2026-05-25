@@ -746,7 +746,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                   </div>
 
                   {/* Center: Name, status badge, chat button - stacked */}
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center' }}>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {/* Name row */}
                     <div style={{ fontWeight: 600, fontSize: 14, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
                     {/* Status badge */}
