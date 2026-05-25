@@ -211,29 +211,64 @@ export default function Dashboard() {
   ] as const;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a0a0a, #1a0f00, #0a0a0a)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
-      {/* Header */}
-      <header style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(212,168,67,0.3)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: 20, margin: 0 }}>SAM Gateway</h1>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {msg && <span style={{ color: '#4ade80', fontSize: 13 }}>{msg}</span>}
-          <button onClick={() => { localStorage.removeItem('sam_token'); setToken(null); }} style={{ ...btnStyle, fontSize: 12, padding: '6px 12px' }}>Logout</button>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0f00 50%, #0a0a0a 100%)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
+      {/* Header - Strive style */}
+      <header style={{
+        background: 'rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(212,168,67,0.15)',
+        padding: '0 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        height: 64,
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+      }}>
+        <h1 style={{ fontSize: 22, margin: 0, fontWeight: 800, color: '#d4a843', letterSpacing: '-0.01em' }}>SAM Gateway</h1>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          {msg && <span style={{ color: '#4ade80', fontSize: 13, fontWeight: 500 }}>{msg}</span>}
+          <button onClick={() => { localStorage.removeItem('sam_token'); setToken(null); }} style={{
+            ...btnStyle,
+            fontSize: 13,
+            padding: '8px 20px',
+            fontWeight: 600,
+            background: 'linear-gradient(135deg, #d4a843, #c9a227)',
+            color: '#0a0a0a',
+            borderRadius: 8,
+          }}>Logout</button>
         </div>
       </header>
 
-      {/* Tabs */}
-      <nav style={{ display: 'flex', gap: 4, padding: '12px 24px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(212,168,67,0.15)' }}>
+      {/* Tabs - Strive underline style */}
+      <nav style={{
+        display: 'flex',
+        gap: 0,
+        padding: '0 24px',
+        background: 'rgba(0,0,0,0.2)',
+        borderBottom: '1px solid rgba(212,168,67,0.1)',
+        overflowX: 'auto',
+      }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
-            ...btnStyle, padding: '8px 16px', fontSize: 13,
-            background: tab === t.id ? 'rgba(16,185,129,0.3)' : 'transparent',
-            border: tab === t.id ? '1px solid rgba(212,168,67,0.5)' : '1px solid transparent',
+            ...btnStyle,
+            padding: '16px 20px',
+            fontSize: 14,
+            fontWeight: tab === t.id ? 700 : 500,
+            background: 'transparent',
+            border: 'none',
+            borderBottom: tab === t.id ? '2px solid #d4a843' : '2px solid transparent',
+            color: tab === t.id ? '#d4a843' : '#888',
+            borderRadius: 0,
+            whiteSpace: 'nowrap',
+            transition: 'all 0.2s',
           }}>{t.label}</button>
         ))}
       </nav>
 
       {/* Content */}
-      <main style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+      <main style={{ padding: '24px 24px 48px', maxWidth: 1200, margin: '0 auto' }}>
         {tab === 'overview' && <OverviewTab providers={providers} accounts={accounts} gatewayKeys={gatewayKeys} oauthTokens={oauthTokens} />}
         {tab === 'providers' && <ProvidersTab providers={providers} accounts={accounts} onReload={loadData} showMsg={showMsg} />}
         {tab === 'keys' && <KeysTab gatewayKeys={gatewayKeys} onReload={loadData} showMsg={showMsg} />}
