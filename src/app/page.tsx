@@ -601,31 +601,14 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
-  // Group accounts by provider — only show providers that have accounts
+  // Build provider cards from accounts only — no pre-configured providers
   const providerGroups = (() => {
-    const groups: Record<string, { id: string; name: string; icon: string; models: string[]; authMethods: string[]; accounts: ProviderAccount[]; baseUrl?: string }> = {};
-    // First, add pre-configured providers that have accounts
-    for (const p of providers) {
-      const accts = accounts.filter(a => a.provider === p.id);
-      if (accts.length > 0) {
-        groups[p.id] = { ...p, accounts: accts };
-      }
-    }
-    // Then, add any accounts whose provider isn't in the pre-configured list
+    const groups: Record<string, { id: string; name: string; accounts: ProviderAccount[] }> = {};
     for (const a of accounts) {
       if (!groups[a.provider]) {
-        groups[a.provider] = {
-          id: a.provider,
-          name: a.provider.charAt(0).toUpperCase() + a.provider.slice(1),
-          icon: '🔗',
-          models: [],
-          authMethods: ['apikey'],
-          accounts: [],
-        };
+        groups[a.provider] = { id: a.provider, name: a.provider, accounts: [] };
       }
-      if (!groups[a.provider].accounts.find(x => x.id === a.id)) {
-        groups[a.provider].accounts.push(a);
-      }
+      groups[a.provider].accounts.push(a);
     }
     return Object.values(groups);
   })();
@@ -702,7 +685,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
 
         {/* Provider header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-          <span style={{ fontSize: 32 }}>{pg.icon}</span>
+          <span style={{ fontSize: 32 }}>🔗</span>
           <div>
             <h2 style={{ fontSize: 22, margin: 0 }}>{pg.name}</h2>
             <p style={{ color: '#888', margin: 0, fontSize: 13 }}>{pg.accounts.length} connection{pg.accounts.length !== 1 ? 's' : ''}</p>
@@ -710,19 +693,6 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
           <button onClick={() => openAddModal(pg.id)} style={{ ...btnStyle, marginLeft: 'auto', background: 'linear-gradient(135deg, #d4a843, #c9a227)', color: '#0a0a0a', fontWeight: 600 }}>
             + Add Key
           </button>
-        </div>
-
-        {/* Endpoint info */}
-        <div style={{ ...cardStyle, marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={{ color: '#888', fontSize: 12 }}>ENDPOINT</span>
-            <code style={{ fontSize: 13, color: '#d4a843' }}>{pg.baseUrl || 'https://api.' + pg.id + '.com/v1'}/chat/completions</code>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {pg.models.map(m => (
-              <span key={m} style={{ fontSize: 11, background: 'rgba(212,168,67,0.1)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 6, padding: '3px 10px', color: '#d4a843' }}>{m}</span>
-            ))}
-          </div>
         </div>
 
         {/* Connections */}
@@ -777,24 +747,19 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
               ...cardStyle,
               cursor: 'pointer',
               transition: 'all 0.2s',
-              borderColor: pg.accounts.length > 0 ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.2)',
+              borderColor: 'rgba(16,185,129,0.3)',
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = pg.accounts.length > 0 ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.2)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(16,185,129,0.3)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 28 }}>{pg.icon}</span>
-              <span style={{ fontSize: 11, color: pg.accounts.length > 0 ? '#10b981' : '#666' }}>
-                {pg.accounts.length > 0 ? `${pg.accounts.length} Connected` : 'Not configured'}
+              <span style={{ fontSize: 28 }}>🔗</span>
+              <span style={{ fontSize: 11, color: '#10b981' }}>
+                {pg.accounts.length} Connected
               </span>
             </div>
             <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{pg.name}</div>
-            <div style={{ fontSize: 11, color: '#888' }}>{pg.models.slice(0, 3).join(', ')}{pg.models.length > 3 ? '...' : ''}</div>
-            <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {pg.authMethods.map(m => (
-                <span key={m} style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#888' }}>{m}</span>
-              ))}
-            </div>
+            <div style={{ fontSize: 11, color: '#888' }}>{pg.accounts.map(a => a.name).join(', ')}</div>
           </div>
         ))}
       </div>
