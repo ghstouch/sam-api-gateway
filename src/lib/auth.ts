@@ -6,7 +6,7 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'gateway2026';
+const ADMIN_PASS = process.env.ADMIN_PASS || '123456';
 
 export interface JWTPayload {
   sub: string;
