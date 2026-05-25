@@ -292,67 +292,300 @@ export default function Dashboard() {
   );
 }
 
-// ─── Overview Tab ───
+// ─── Overview Tab (clovie-router style) ───
 function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
   providers: Provider[]; accounts: ProviderAccount[]; gatewayKeys: GatewayKey[]; oauthTokens: OAuthToken[];
 }) {
-  const stats = [
-    { label: 'Providers', value: providers.length, icon: '>' },
-    { label: 'Provider Accounts', value: accounts.length, sub: `${accounts.filter(a => a.enabled).length} active`, icon: '*' },
-    { label: 'Gateway Keys', value: gatewayKeys.length, sub: `${gatewayKeys.filter(k => k.enabled).length} active`, icon: '#' },
-    { label: 'OAuth Tokens', value: oauthTokens.length, sub: `${oauthTokens.filter(t => t.enabled && t.expiresAt > Date.now()).length} valid`, icon: '@' },
-  ];
+  const [view, setView] = useState<'overview' | 'details'>('overview');
+  const [range, setRange] = useState<string>('24h');
+  const [usage, setUsage] = useState<any>(null);
+
+  useEffect(() => { loadUsage(); }, [range]);
+
+  async function loadUsage() {
+    try {
+      const token = localStorage.getItem('sam_token');
+      const res = await fetch(`/api/admin/usage?range=${range}`, { headers: { Authorization: 'Bearer ' + token } });
+      const data = await res.json();
+      if (data.stats) setUsage(data);
+    } catch {}
+  }
+
+  const totalRequests = usage?.stats?.totalRequests || 0;
+  const totalInput = usage?.stats?.totalInputTokens || 0;
+  const totalOutput = usage?.stats?.totalOutputTokens || 0;
+  const totalCost = usage?.stats?.totalCost || 0;
+  const hourlyData: { hour: string; count: number }[] = usage?.stats?.hourlyRequests || [];
+  const byModel: Record<string, { requests: number; tokens: number }> = usage?.stats?.byModel || {};
+
+  function fmt(n: number): string {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return n.toLocaleString();
+  }
+
+  function timeAgo(ts: string): string {
+    const diff = Date.now() - new Date(ts).getTime();
+    if (diff < 60000) return Math.floor(diff / 1000) + 's ago';
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+    return Math.floor(diff / 86400000) + 'd ago';
+  }
+
+  const rangeBtns = ['Today', '24h', '7D', '30D', '60D'];
+  const viewBtns = ['Overview', 'Details'];
+
+  const card: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(212,168,67,0.08)',
+    borderRadius: 12,
+    padding: 20,
+  };
+
+  const sBtn: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(212,168,67,0.1)',
+    borderRadius: 6,
+    padding: '6px 12px',
+    color: '#888',
+    fontSize: 12,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  };
+
+  const sBtnA: React.CSSProperties = { ...sBtn, background: 'rgba(212,168,67,0.15)', color: '#d4a843', borderColor: 'rgba(212,168,67,0.3)' };
+
+  const maxH = hourlyData.length > 0 ? Math.max(...hourlyData.map(h => h.count), 1) : 1;
+  const chartH = 100;
 
   return (
     <div>
-      <h2 style={{ fontSize: 18, marginBottom: 16 }}>Dashboard Overview</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-        {stats.map(s => (
-          <div key={s.label} style={cardStyle}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
-            <div style={{ fontSize: 32, fontWeight: 700 }}>{s.value}</div>
-            <div style={{ color: '#888', fontSize: 13 }}>{s.label}</div>
-            {s.sub && <div style={{ color: '#d4a843', fontSize: 12, marginTop: 4 }}>{s.sub}</div>}
-          </div>
-        ))}
+      {/* View & Range selectors */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {viewBtns.map(v => (
+            <button key={v} onClick={() => setView(v.toLowerCase() as any)}
+              className="tab-btn"
+              style={view === v.toLowerCase() ? sBtnA : sBtn}
+              onMouseEnter={e => { if (view !== v.toLowerCase()) e.currentTarget.style.color = '#d4a843'; }}
+              onMouseLeave={e => { if (view !== v.toLowerCase()) e.currentTarget.style.color = '#888'; }}
+            >{v}</button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {rangeBtns.map(r => (
+            <button key={r} onClick={() => setRange(r.toLowerCase())}
+              className="tab-btn"
+              style={range === r.toLowerCase() ? sBtnA : sBtn}
+              onMouseEnter={e => { if (range !== r.toLowerCase()) e.currentTarget.style.color = '#d4a843'; }}
+              onMouseLeave={e => { if (range !== r.toLowerCase()) e.currentTarget.style.color = '#888'; }}
+            >{r}</button>
+          ))}
+        </div>
       </div>
 
-      <h3 style={{ fontSize: 16, marginTop: 32, marginBottom: 12 }}>Provider Accounts</h3>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={tableStyle}>
-          <thead><tr><th>Provider</th><th>Name</th><th>Auth</th><th>Requests</th><th>Status</th></tr></thead>
-          <tbody>
-            {accounts.map(a => (
-              <tr key={a.id}>
-                <td>{a.provider}</td>
-                <td>{a.name}</td>
-                <td>{a.authMethod}</td>
-                <td>{a.requestCount}</td>
-                <td><span style={{ color: a.enabled ? '#d4a843' : '#c9a227' }}>{a.enabled ? 'Active' : 'Disabled'}</span></td>
-              </tr>
+      {/* Stat cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
+        <div style={card}>
+          <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>TOTAL REQUESTS</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: '#fff' }}>{fmt(totalRequests)}</div>
+        </div>
+        <div style={card}>
+          <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>TOTAL INPUT TOKENS</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: '#ef4444' }}>{fmt(totalInput)}</div>
+        </div>
+        <div style={card}>
+          <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>OUTPUT TOKENS</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: '#4ade80' }}>{fmt(totalOutput)}</div>
+        </div>
+        <div style={card}>
+          <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>EST. COST</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: '#d4a843' }}>{totalCost > 0 ? `~$${totalCost.toFixed(2)}` : '~$0.00'}</div>
+          <div style={{ fontSize: 11, color: '#555', marginTop: 4 }}>Estimated, not actual billing</div>
+        </div>
+      </div>
+
+      {/* Hourly Requests Chart */}
+      {hourlyData.length > 0 && (
+        <div style={{ ...card, marginBottom: 24 }}>
+          <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>REQUESTS PER HOUR</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: chartH, overflow: 'hidden' }}>
+            {hourlyData.slice(-48).map((h, i) => {
+              const barH = Math.max(2, (h.count / maxH) * chartH);
+              return (
+                <div key={i} title={`${h.hour}: ${h.count} requests`} style={{
+                  flex: 1,
+                  height: barH,
+                  background: 'linear-gradient(to top, rgba(212,168,67,0.6), rgba(212,168,67,0.2))',
+                  borderRadius: '3px 3px 0 0',
+                  minWidth: 4,
+                  transition: 'height 0.3s',
+                }} />
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: '#555' }}>{hourlyData.length > 0 ? hourlyData[Math.max(0, hourlyData.length - 48)].hour.slice(11) : ''}</span>
+            <span style={{ fontSize: 10, color: '#555' }}>{hourlyData.length > 0 ? hourlyData[hourlyData.length - 1].hour.slice(11) : ''}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Details view */}
+      {view === 'details' && (
+        <>
+          {/* By Model breakdown */}
+          {Object.keys(byModel).length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ fontSize: 14, marginBottom: 12, color: '#888', textTransform: 'uppercase', letterSpacing: 1 }}>By Model</h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={tableStyle}>
+                  <thead><tr><th>Model</th><th>Requests</th><th>Tokens</th><th>Share</th></tr></thead>
+                  <tbody>
+                    {Object.entries(byModel).sort(([, a], [, b]) => b.requests - a.requests).map(([model, data]) => (
+                      <tr key={model}>
+                        <td>
+                          <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#4ade80', marginRight: 8, verticalAlign: 'middle' }} />
+                          {model}
+                        </td>
+                        <td>{data.requests}</td>
+                        <td>{fmt(data.tokens)}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ width: 60, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                              <div style={{ width: `${totalRequests > 0 ? (data.requests / totalRequests * 100) : 0}%`, height: '100%', background: '#d4a843', borderRadius: 3 }} />
+                            </div>
+                            <span style={{ fontSize: 11, color: '#888' }}>{totalRequests > 0 ? (data.requests / totalRequests * 100).toFixed(0) : 0}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* By Provider breakdown */}
+          {usage?.stats?.byProvider && Object.keys(usage.stats.byProvider).length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ fontSize: 14, marginBottom: 12, color: '#888', textTransform: 'uppercase', letterSpacing: 1 }}>By Provider</h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={tableStyle}>
+                  <thead><tr><th>Provider</th><th>Requests</th><th>Tokens</th><th>Share</th></tr></thead>
+                  <tbody>
+                    {Object.entries(usage.stats.byProvider).sort(([, a]: any, [, b]: any) => b.requests - a.requests).map(([prov, data]: [string, any]) => (
+                      <tr key={prov}>
+                        <td>{prov}</td>
+                        <td>{data.requests}</td>
+                        <td>{fmt(data.tokens)}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ width: 60, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                              <div style={{ width: `${totalRequests > 0 ? (data.requests / totalRequests * 100) : 0}%`, height: '100%', background: '#d4a843', borderRadius: 3 }} />
+                            </div>
+                            <span style={{ fontSize: 11, color: '#888' }}>{totalRequests > 0 ? (data.requests / totalRequests * 100).toFixed(0) : 0}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Recent Requests — clovie style */}
+          <h3 style={{ fontSize: 14, marginBottom: 12, color: '#888', textTransform: 'uppercase', letterSpacing: 1 }}>Recent Requests</h3>
+          {usage?.recentLogs && usage.recentLogs.length > 0 ? (
+            <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+              <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                {usage.recentLogs.slice(0, 50).map((r: any, i: number) => (
+                  <div key={r.id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '10px 16px',
+                    borderBottom: i < 49 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    gap: 16,
+                    fontSize: 13,
+                    transition: 'background 0.15s',
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    {/* Model + status dot */}
+                    <div style={{ flex: '1 1 200px', minWidth: 150, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: r.status === 'error' ? '#ef4444' : '#4ade80', flexShrink: 0 }} />
+                      <span style={{ fontWeight: 600, color: '#eee' }}>{r.model || 'unknown'}</span>
+                    </div>
+                    {/* In / Out — clovie style */}
+                    <div style={{ flex: '0 0 160px', display: 'flex', gap: 12, fontFamily: 'monospace', fontSize: 12 }}>
+                      <span style={{ color: '#ef4444' }}>&#8593;{fmt(r.promptTokens)}</span>
+                      <span style={{ color: '#4ade80' }}>&#8595;{fmt(r.completionTokens)}</span>
+                    </div>
+                    {/* Latency */}
+                    <div style={{ flex: '0 0 70px', color: '#666', fontSize: 12, textAlign: 'right' }}>
+                      {r.latencyMs ? (r.latencyMs >= 1000 ? (r.latencyMs / 1000).toFixed(1) + 's' : r.latencyMs + 'ms') : '—'}
+                    </div>
+                    {/* Time ago */}
+                    <div style={{ flex: '0 0 80px', color: '#555', fontSize: 12, textAlign: 'right' }}>
+                      {timeAgo(r.timestamp)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: '#555', padding: 40 }}>No requests recorded yet</div>
+          )}
+        </>
+      )}
+
+      {/* Provider summary (overview mode) */}
+      {view === 'overview' && (
+        <>
+          {/* Quick recent requests (last 5) */}
+          {usage?.recentLogs && usage.recentLogs.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ fontSize: 14, marginBottom: 12, color: '#888', textTransform: 'uppercase', letterSpacing: 1 }}>Recent Requests</h3>
+              <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+                {usage.recentLogs.slice(0, 5).map((r: any, i: number) => (
+                  <div key={r.id} style={{
+                    display: 'flex', alignItems: 'center', padding: '10px 16px',
+                    borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none', gap: 16, fontSize: 13,
+                  }}>
+                    <div style={{ flex: '1 1 200px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: r.status === 'error' ? '#ef4444' : '#4ade80' }} />
+                      <span style={{ fontWeight: 600, color: '#eee' }}>{r.model || 'unknown'}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, fontFamily: 'monospace', fontSize: 12 }}>
+                      <span style={{ color: '#ef4444' }}>&#8593;{fmt(r.promptTokens)}</span>
+                      <span style={{ color: '#4ade80' }}>&#8595;{fmt(r.completionTokens)}</span>
+                    </div>
+                    <div style={{ color: '#555', fontSize: 12 }}>{timeAgo(r.timestamp)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Provider cards */}
+          <h3 style={{ fontSize: 14, marginBottom: 12, color: '#888', textTransform: 'uppercase', letterSpacing: 1 }}>Provider Accounts</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+            {providers.map(p => (
+              <div key={p.id} style={{ ...card, padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 20 }}>{p.icon}</span>
+                  <strong style={{ fontSize: 14 }}>{p.name}</strong>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: '#888' }}>{accounts.filter(a => a.provider === p.id).length} accounts</span>
+                </div>
+                <div style={{ fontSize: 11, color: '#666' }}>Models: {p.models.slice(0, 3).join(', ')}{p.models.length > 3 ? '...' : ''}</div>
+              </div>
             ))}
-            {accounts.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: '#666' }}>No accounts configured</td></tr>}
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style={{ fontSize: 16, marginTop: 32, marginBottom: 12 }}>Supported Providers</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
-        {providers.map(p => (
-          <div key={p.id} style={{ ...cardStyle, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 24 }}>{p.icon}</span>
-              <strong>{p.name}</strong>
-            </div>
-            <div style={{ fontSize: 12, color: '#888' }}>
-              Models: {p.models.join(', ')}
-            </div>
-            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
-              Auth: {p.authMethods.join(', ')} {p.hasOAuth && '(oauth)'}
-            </div>
+            {providers.length === 0 && <div style={{ color: '#555' }}>No providers configured</div>}
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 }

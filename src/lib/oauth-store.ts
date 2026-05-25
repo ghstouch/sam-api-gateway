@@ -36,6 +36,19 @@ export interface ProviderAccount {
   rateLimit: number; // Requests per minute, 0 = unlimited
 }
 
+export interface UsageRecord {
+  id: string;
+  accountId: string;
+  provider: string;
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  latencyMs: number;
+  status: number;
+  timestamp: string;
+}
+
 // ─── Redis / In-memory ───
 let redis: any = null;
 let useRedis = false;
@@ -61,6 +74,7 @@ async function getRedis() {
 // ─── In-memory stores ───
 const oauthTokens: Map<string, OAuthToken> = new Map();
 const providerAccounts: Map<string, ProviderAccount> = new Map();
+const usageLogs: UsageRecord[] = []; // In-memory usage log
 
 // ─── Redis helpers ───
 const OAUTH_TOKENS_KEY = 'sam:oauth_tokens';
@@ -327,12 +341,87 @@ export async function recordProviderUsage(
   account.totalCost += (usage.cost || 0);
   account.lastUsed = new Date().toISOString();
 
+  // Log usage record
+  usageLogs.push({
+    id: randomUUID(),
+    accountId,
+    provider: account.provider,
+    model: usage.model,
+    promptTokens: usage.promptTokens,
+    completionTokens: usage.completionTokens,
+    totalTokens: usage.totalTokens,
+    latencyMs: usage.latencyMs,
+    status: usage.status,
+    timestamp: new Date().toISOString(),
+  });
+
+  // Keep max 10000 records
+  if (usageLogs.length > 10000) usageLogs.splice(0, usageLogs.length - 10000);
+
   const r = await getRedis();
   if (r) {
     await redisSet(PROVIDER_ACCOUNTS_KEY, accountId, account);
   } else {
     providerAccounts.set(accountId, account);
   }
+}
+
+// ─── Usage Analytics ───
+
+export function getUsageLogs(fromMs?: number): UsageRecord[] {
+  if (!fromMs) return usageLogs;
+  return usageLogs.filter(r => new Date(r.timestamp).getTime() >= fromMs);
+}
+
+export interface UsageStats {
+  totalRequests: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalTokens: number;
+  totalCost: number;
+  byProvider: Record<string, { requests: number; tokens: number; cost: number }>;
+  byModel: Record<string, { requests: number; tokens: number; cost: number }>;
+  hourlyRequests: { hour: string; count: number }[];
+}
+
+export function getUsageStats(fromMs?: number): UsageStats {
+  const logs = fromMs ? usageLogs.filter(r => new Date(r.timestamp).getTime() >= fromMs) : usageLogs;
+
+  const stats: UsageStats = {
+    totalRequests: logs.length,
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+    totalTokens: 0,
+    totalCost: 0,
+    byProvider: {},
+    byModel: {},
+    hourlyRequests: [],
+  };
+
+  const hourlyMap: Record<string, number> = {};
+
+  for (const r of logs) {
+    stats.totalInputTokens += r.promptTokens;
+    stats.totalOutputTokens += r.completionTokens;
+    stats.totalTokens += r.totalTokens;
+
+    if (!stats.byProvider[r.provider]) stats.byProvider[r.provider] = { requests: 0, tokens: 0, cost: 0 };
+    stats.byProvider[r.provider].requests++;
+    stats.byProvider[r.provider].tokens += r.totalTokens;
+
+    if (!stats.byModel[r.model]) stats.byModel[r.model] = { requests: 0, tokens: 0, cost: 0 };
+    stats.byModel[r.model].requests++;
+    stats.byModel[r.model].tokens += r.totalTokens;
+
+    const hour = r.timestamp.slice(0, 13); // YYYY-MM-DDTHH
+    hourlyMap[hour] = (hourlyMap[hour] || 0) + 1;
+  }
+
+  stats.hourlyRequests = Object.entries(hourlyMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([hour, count]) => ({ hour, count }));
+
+  return stats;
 }
 
 // ─── Token Refresh ───
