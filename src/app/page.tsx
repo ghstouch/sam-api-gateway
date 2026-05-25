@@ -787,27 +787,18 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
             </div>
 
             <form onSubmit={addAccount} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Provider */}
+              {/* Provider Name */}
               <div>
-                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Provider *</label>
-                <input value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })} placeholder="e.g. openai, anthropic, xiaomi-mimo" style={{ ...inputStyle, width: '100%' }} required />
-                <span style={{ fontSize: 11, color: '#555' }}>Provider ID — type any name or select from known providers.</span>
-                {/* Quick picks */}
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                  {providers.map(p => (
-                    <button key={p.id} type="button" onClick={() => setForm({ ...form, provider: p.id, baseUrl: p.baseUrl || '' })}
-                      style={{ ...btnStyle, fontSize: 11, padding: '3px 10px', background: form.provider === p.id ? 'rgba(212,168,67,0.2)' : 'rgba(255,255,255,0.05)', borderColor: form.provider === p.id ? '#d4a843' : 'rgba(255,255,255,0.1)' }}>
-                      {p.icon} {p.name}
-                    </button>
-                  ))}
-                </div>
+                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Name</label>
+                <input value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })} placeholder="e.g. OpenAI, Anthropic, Xiaomi MiMo" style={{ ...inputStyle, width: '100%' }} required />
+                <span style={{ fontSize: 11, color: '#555' }}>Required. A friendly label for this provider.</span>
               </div>
 
-              {/* Name */}
+              {/* Prefix */}
               <div>
-                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Name *</label>
-                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Production Key" style={{ ...inputStyle, width: '100%' }} required />
-                <span style={{ fontSize: 11, color: '#555' }}>A friendly label for this connection.</span>
+                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Prefix</label>
+                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. openai-prod, mimo-dev" style={{ ...inputStyle, width: '100%' }} required />
+                <span style={{ fontSize: 11, color: '#555' }}>Required. Unique prefix for model names.</span>
               </div>
 
               {/* API Type */}
@@ -827,39 +818,28 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
               <div>
                 <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Base URL</label>
                 <input value={form.baseUrl} onChange={e => setForm({ ...form, baseUrl: e.target.value })} placeholder="https://api.openai.com/v1" style={{ ...inputStyle, width: '100%' }} />
-                <span style={{ fontSize: 11, color: '#555' }}>Root URL of your API. Leave empty to use provider default.</span>
+                <span style={{ fontSize: 11, color: '#555' }}>Root URL of your OpenAI-compatible API.</span>
               </div>
 
               {/* API Key + Check */}
-              {form.authMethod === 'apikey' && (
-                <div>
-                  <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>API Key</label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input value={form.apiKey} onChange={e => { setForm({ ...form, apiKey: e.target.value }); setCheckResult(null); }} placeholder="sk-..." style={{ ...inputStyle, flex: 1 }} required />
-                    <button type="button" onClick={checkKey} disabled={checking} style={{ ...btnStyle, whiteSpace: 'nowrap', opacity: checking ? 0.5 : 1 }}>
-                      {checking ? 'Checking...' : 'Check'}
-                    </button>
-                  </div>
-                  {checkResult && (
-                    <div style={{
-                      marginTop: 8, padding: '8px 12px', borderRadius: 8, fontSize: 13,
-                      background: checkResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                      border: `1px solid ${checkResult.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                      color: checkResult.ok ? '#10b981' : '#ef4444',
-                    }}>
-                      {checkResult.ok ? '✓' : '✗'} {checkResult.msg}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Auth method toggle */}
               <div>
-                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Auth Method</label>
+                <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>API Key (for Check)</label>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" onClick={() => setForm({ ...form, authMethod: 'apikey' })} style={{ ...btnStyle, flex: 1, background: form.authMethod === 'apikey' ? 'rgba(212,168,67,0.2)' : 'rgba(255,255,255,0.05)', borderColor: form.authMethod === 'apikey' ? '#d4a843' : 'rgba(255,255,255,0.1)' }}>API Key</button>
-                  <button type="button" onClick={() => setForm({ ...form, authMethod: 'oauth' })} style={{ ...btnStyle, flex: 1, background: form.authMethod === 'oauth' ? 'rgba(212,168,67,0.2)' : 'rgba(255,255,255,0.05)', borderColor: form.authMethod === 'oauth' ? '#d4a843' : 'rgba(255,255,255,0.1)' }}>OAuth</button>
+                  <input value={form.apiKey} onChange={e => { setForm({ ...form, apiKey: e.target.value }); setCheckResult(null); }} placeholder="sk-..." style={{ ...inputStyle, flex: 1 }} />
+                  <button type="button" onClick={checkKey} disabled={checking} style={{ ...btnStyle, whiteSpace: 'nowrap', opacity: checking ? 0.5 : 1, background: 'rgba(255,255,255,0.08)', color: '#ccc' }}>
+                    {checking ? 'Checking...' : 'Check'}
+                  </button>
                 </div>
+                {checkResult && (
+                  <div style={{
+                    marginTop: 8, padding: '8px 12px', borderRadius: 8, fontSize: 13,
+                    background: checkResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                    border: `1px solid ${checkResult.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                    color: checkResult.ok ? '#10b981' : '#ef4444',
+                  }}>
+                    {checkResult.ok ? '✓' : '✗'} {checkResult.msg}
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
