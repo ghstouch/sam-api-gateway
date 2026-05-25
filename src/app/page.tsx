@@ -709,24 +709,40 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
           {providerGroups.map(pg => {
             const anyEnabled = pg.accounts.some(a => a.enabled);
+            // Provider logo/icon
+            const pid = pg.id.toLowerCase();
+            let logo = '🔗';
+            if (pid.includes('openai') || pid.includes('openrouter') || pid.includes('agentrouter')) logo = '🧠';
+            else if (pid.includes('anthropic') || pid.includes('claude')) logo = '🎭';
+            else if (pid.includes('gemini') || pid.includes('google')) logo = '🔮';
+            else if (pid.includes('mimo') || pid.includes('xiaomi')) logo = '🤖';
+            else if (pid.includes('kiro')) logo = '⚡';
+            else if (pid.includes('deepseek')) logo = '🐋';
+            else if (pid.includes('mistral')) logo = '💨';
+            else if (pid.includes('groq')) logo = '⚡';
             return (
               <div key={pg.id} onClick={() => setSelectedProvider(pg.id)}
                 style={{ ...cardStyle, cursor: 'pointer', transition: 'all 0.2s', borderColor: anyEnabled ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.15)' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = anyEnabled ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.15)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontSize: 24 }}>🔗</span>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: anyEnabled ? '#10b981' : '#ef4444' }} />
-                </div>
-                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{pg.name}</div>
-                <div style={{ fontSize: 11, color: '#888', marginBottom: 10 }}>{pg.accounts.length} Connected</div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#888' }}>Chat</span>
+                {/* Logo + Name row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                  <span style={{ fontSize: 24 }}>{logo}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{pg.name}</div>
+                    <div style={{ fontSize: 11, color: anyEnabled ? '#10b981' : '#666', transition: 'color 0.2s' }}>{anyEnabled ? 'Connected' : 'Disabled'}</div>
+                  </div>
+                  {/* Toggle centered */}
                   <div onClick={e => { e.stopPropagation(); const allOn = pg.accounts.every(a => a.enabled); pg.accounts.forEach(a => toggleAccount(a.id, { enabled: !allOn })); }}
                     style={{ width: 36, height: 20, borderRadius: 10, background: anyEnabled ? '#10b981' : '#333', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${anyEnabled ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}` }}>
                     <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 1, left: anyEnabled ? 17 : 1, transition: 'left 0.2s' }} />
                   </div>
+                </div>
+                {/* Badge row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 36 }}>
+                  <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#888' }}>Chat</span>
+                  <span style={{ fontSize: 10, color: '#555' }}>{pg.accounts.length} key{pg.accounts.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
             );
