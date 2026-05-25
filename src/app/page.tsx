@@ -63,17 +63,93 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0a0a, #1a0f00, #0a0a0a)' }}>
-      <form onSubmit={handleLogin} style={{ background: 'rgba(20,5,5,0.8)', backdropFilter: 'blur(20px)', border: '1px solid #d4a843', boxShadow: '0 0 30px rgba(16,185,129,0.1)', borderRadius: 16, padding: 40, width: 360 }}>
-        <h1 style={{ color: '#d4a843', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>SAM Gateway</h1>
-        <p style={{ color: '#6ee7b7', textAlign: 'center', marginBottom: 24, fontSize: 14, fontWeight: 'bold' }}>Multi Provider Gateway</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
-          <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" style={{ ...inputStyle, width: '100%' }} />
-          <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Password" style={{ ...inputStyle, width: '100%' }} />
-          {error && <p style={{ color: '#c9a227', fontSize: 13, width: '100%' }}>{error}</p>}
-          <button type="submit" disabled={loading} style={{ ...btnStyle, width: '100%' }}>{loading ? 'Logging in...' : 'Login'}</button>
-        </div>
-      </form>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0f00 50%, #0a0a0a 100%)',
+      position: 'relative',
+      overflow: 'hidden',
+      padding: '24px',
+    }}>
+      {/* Subtle pattern overlay */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'radial-gradient(ellipse at 50% 30%, rgba(212,168,67,0.06) 0%, transparent 70%)',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'radial-gradient(ellipse at 80% 70%, rgba(16,185,129,0.04) 0%, transparent 60%)',
+      }} />
+
+      {/* Hero Content */}
+      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 480, width: '100%' }}>
+        <h1 style={{
+          color: '#d4a843',
+          fontSize: 'clamp(32px, 6vw, 48px)',
+          fontWeight: 800,
+          letterSpacing: '-0.02em',
+          marginBottom: 8,
+          lineHeight: 1.1,
+        }}>SAM Gateway</h1>
+        <p style={{
+          color: '#6ee7b7',
+          fontSize: 'clamp(14px, 2.5vw, 18px)',
+          fontWeight: 600,
+          marginBottom: 40,
+          opacity: 0.9,
+        }}>Multi Provider Gateway</p>
+
+        {/* Login Form */}
+        <form onSubmit={handleLogin} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+          width: '100%',
+          maxWidth: 360,
+          margin: '0 auto',
+        }}>
+          <input
+            value={user}
+            onChange={e => setUser(e.target.value)}
+            placeholder="Username"
+            style={{
+              ...inputStyle,
+              width: '100%',
+              padding: '14px 16px',
+              fontSize: 15,
+              borderRadius: 10,
+            }}
+          />
+          <input
+            value={pass}
+            onChange={e => setPass(e.target.value)}
+            type="password"
+            placeholder="Password"
+            style={{
+              ...inputStyle,
+              width: '100%',
+              padding: '14px 16px',
+              fontSize: 15,
+              borderRadius: 10,
+            }}
+          />
+          {error && <p style={{ color: '#c9a227', fontSize: 13, margin: 0 }}>{error}</p>}
+          <button type="submit" disabled={loading} style={{
+            ...btnStyle,
+            width: '100%',
+            padding: '14px 24px',
+            fontSize: 15,
+            fontWeight: 700,
+            borderRadius: 10,
+            marginTop: 4,
+            background: 'linear-gradient(135deg, #d4a843, #c9a227)',
+            color: '#0a0a0a',
+          }}>{loading ? 'Logging in...' : 'Get Started'}</button>
+        </form>
+      </div>
     </div>
   );
 }
