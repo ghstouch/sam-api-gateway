@@ -2,7 +2,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'ogw-admin-secret-2026'
+  process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'sam-admin-secret-2026'
 );
 
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';

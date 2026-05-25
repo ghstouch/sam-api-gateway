@@ -4,7 +4,7 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'OGW Gateway — Multi-Provider OAuth API Gateway',
+  title: 'SAM Gateway — Multi-Provider OAuth API Gateway',
   description: 'OpenAI-compatible API gateway with OAuth support for Google Gemini, Kiro, and more',
 };
 

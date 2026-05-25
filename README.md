@@ -1,4 +1,4 @@
-# OGW Gateway — Multi-Provider OAuth API Gateway
+# SAM Gateway — Multi-Provider OAuth API Gateway
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ghstouch/oauth-api-gateway)
 
@@ -90,7 +90,7 @@ Account 2|openai|sk-yyy...
 **Chat Completions (OpenAI-compatible):**
 ```bash
 curl -X POST http://localhost:3000/v1/chat/completions \
-  -H "Authorization: Bearer ogw-your-key" \
+  -H "Authorization: Bearer sam_your-key" \
   -H "Content-Type: application/json" \
   -d '{"model": "gemini-pro", "messages": [{"role": "user", "content": "Hello"}]}'
 ```
@@ -172,8 +172,8 @@ vercel --prod
 ### Docker
 
 ```bash
-docker build -t ogw-gateway .
-docker run -p 3000:3000 --env-file .env.local ogw-gateway
+docker build -t sam_gateway .
+docker run -p 3000:3000 --env-file .env.local sam_gateway
 ```
 
 ## Tech Stack

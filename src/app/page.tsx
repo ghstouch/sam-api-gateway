@@ -26,11 +26,11 @@ interface OAuthToken {
 
 // ─── API Helper ───
 async function api(path: string, opts?: RequestInit) {
-  const token = localStorage.getItem('ogw_token');
+  const token = localStorage.getItem('sam_token');
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   const res = await fetch(path, { ...opts, headers: { ...headers, ...opts?.headers } });
-  if (res.status === 401) { localStorage.removeItem('ogw_token'); window.location.reload(); }
+  if (res.status === 401) { localStorage.removeItem('sam_token'); window.location.reload(); }
   return res.json();
 }
 
@@ -53,7 +53,7 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
       });
       const data = await res.json();
       if (data.token) {
-        localStorage.setItem('ogw_token', data.token);
+        localStorage.setItem('sam_token', data.token);
         onLogin(data.token);
       } else {
         setError(data.error || 'Login failed');
@@ -65,7 +65,7 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
       <form onSubmit={handleLogin} style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 40, width: 360 }}>
-        <h1 style={{ color: '#fff', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>🔐 OGW Gateway</h1>
+        <h1 style={{ color: '#fff', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>🔐 SAM Gateway</h1>
         <p style={{ color: '#888', textAlign: 'center', marginBottom: 24, fontSize: 14 }}>Multi-Provider OAuth API Gateway</p>
         <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" style={inputStyle} />
         <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Password" style={inputStyle} />
@@ -87,7 +87,7 @@ export default function Dashboard() {
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
-    const saved = localStorage.getItem('ogw_token');
+    const saved = localStorage.getItem('sam_token');
     if (saved) setToken(saved);
   }, []);
 
@@ -124,10 +124,10 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <header style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: 20, margin: 0 }}>⚡ OGW Gateway</h1>
+        <h1 style={{ fontSize: 20, margin: 0 }}>⚡ SAM Gateway</h1>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           {msg && <span style={{ color: '#4ade80', fontSize: 13 }}>{msg}</span>}
-          <button onClick={() => { localStorage.removeItem('ogw_token'); setToken(null); }} style={{ ...btnStyle, fontSize: 12, padding: '6px 12px' }}>Logout</button>
+          <button onClick={() => { localStorage.removeItem('sam_token'); setToken(null); }} style={{ ...btnStyle, fontSize: 12, padding: '6px 12px' }}>Logout</button>
         </div>
       </header>
 

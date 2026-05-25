@@ -35,7 +35,7 @@ if (!keys.has(DEFAULT_KEY)) {
 }
 
 export function generateGatewayKey(name: string, rateLimit = 0, allowedProviders: string[] = []): GatewayApiKey {
-  const key = 'ogw-' + randomBytes(24).toString('hex');
+  const key = 'sam_' + randomBytes(24).toString('hex');
   const apiKey: GatewayApiKey = {
     key,
     name,

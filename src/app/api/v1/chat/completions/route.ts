@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
-        { error: { message: 'Missing Authorization header. Use: Bearer ogw-xxxxx', type: 'auth_error' } },
+        { error: { message: 'Missing Authorization header. Use: Bearer sam_xxxxx', type: 'auth_error' } },
         { status: 401 }
       );
     }
