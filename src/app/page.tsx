@@ -601,14 +601,6 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
-  // Categorize providers
-  const CATEGORIES: Record<string, { label: string; desc?: string; match: (id: string) => boolean }> = {
-    compatible: { label: 'API Key Compatible Providers', match: id => ['openai', 'anthropic', 'openrouter', 'agentrouter'].some(k => id.includes(k)) },
-    free: { label: 'Free Tier Providers', desc: 'Providers with free tiers — some require an API key signup.', match: id => ['gemini', 'google', 'kiro'].some(k => id.includes(k)) },
-    llm: { label: 'LLM Providers', match: id => ['mimo', 'reka', 'deepseek', 'mistral', 'cohere', 'groq'].some(k => id.includes(k)) },
-    other: { label: 'Other Providers', match: () => true },
-  };
-
   // Build provider groups from accounts
   const providerGroups = (() => {
     const groups: Record<string, { id: string; name: string; accounts: ProviderAccount[] }> = {};
@@ -617,19 +609,6 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
       groups[a.provider].accounts.push(a);
     }
     return Object.values(groups);
-  })();
-
-  // Group into sections
-  const sections = (() => {
-    const result: { key: string; label: string; desc?: string; providers: typeof providerGroups }[] = [];
-    const used = new Set<string>();
-    for (const [key, cat] of Object.entries(CATEGORIES)) {
-      const matched = providerGroups.filter(pg => { if (!used.has(pg.id) && cat.match(pg.id)) { used.add(pg.id); return true; } return false; });
-      if (matched.length > 0 || key !== 'other') {
-        result.push({ key, label: cat.label, desc: cat.desc, providers: matched });
-      }
-    }
-    return result;
   })();
 
   // Toggle state per provider
@@ -719,55 +698,38 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
         </div>
       </div>
 
-      {/* Sections */}
-      {sections.map(sec => (
-        <div key={sec.key} style={{ marginBottom: 32 }}>
-          {/* Section header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: sec.providers.length > 0 ? '#10b981' : '#555' }} />
-            <span style={{ fontWeight: 600, fontSize: 15 }}>{sec.label}</span>
-            <span style={{ fontSize: 12, color: '#888', marginLeft: 4 }}>{sec.providers.filter(p => p.accounts.some(a => a.enabled)).length}/{sec.providers.length}</span>
-            <div style={{ flex: 1 }} />
-            <button style={{ ...btnStyle, background: 'rgba(255,255,255,0.06)', color: '#888', fontSize: 12, padding: '4px 12px' }}>Test All</button>
-          </div>
-          {sec.desc && <p style={{ fontSize: 12, color: '#555', margin: '0 0 12px 18px' }}>{sec.desc}</p>}
-
-          {/* Provider cards */}
-          {sec.providers.length === 0 ? (
-            <div style={{ ...cardStyle, textAlign: 'center', color: '#555', padding: 24, marginLeft: 18 }}>No providers in this category.</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 18 }}>
-              {sec.providers.map(pg => {
-                const anyEnabled = pg.accounts.some(a => a.enabled);
-                return (
-                  <div key={pg.id} onClick={() => setSelectedProvider(pg.id)} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 16, padding: '12px 20px', cursor: 'pointer', transition: 'all 0.2s' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.15)'; }}
-                  >
-                    <span style={{ fontSize: 22 }}>🔗</span>
-                    <span style={{ fontWeight: 600, fontSize: 14, minWidth: 140 }}>{pg.name}</span>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: anyEnabled ? '#10b981' : '#ef4444' }} />
-                    <span style={{ fontSize: 12, color: '#888', minWidth: 90 }}>{pg.accounts.length} Connected</span>
-                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#888' }}>Chat</span>
-                    <div style={{ flex: 1 }} />
-                    {/* Toggle */}
-                    <div onClick={e => { e.stopPropagation(); const allOn = pg.accounts.every(a => a.enabled); pg.accounts.forEach(a => toggleAccount(a.id, { enabled: !allOn })); }}
-                      style={{ width: 36, height: 20, borderRadius: 10, background: anyEnabled ? '#10b981' : '#333', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${anyEnabled ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}` }}>
-                      <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 1, left: anyEnabled ? 17 : 1, transition: 'left 0.2s' }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      ))}
-
-      {/* Empty state */}
-      {providerGroups.length === 0 && (
+      {/* Provider Cards Grid */}
+      {providerGroups.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: '48px 24px', color: '#666' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>No providers yet</div>
           <div style={{ fontSize: 14, color: '#555' }}>Click "+ Add OpenAI Compatible" to add your first provider.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+          {providerGroups.map(pg => {
+            const anyEnabled = pg.accounts.some(a => a.enabled);
+            return (
+              <div key={pg.id} onClick={() => setSelectedProvider(pg.id)}
+                style={{ ...cardStyle, cursor: 'pointer', transition: 'all 0.2s', borderColor: anyEnabled ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.15)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = anyEnabled ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.15)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span style={{ fontSize: 24 }}>🔗</span>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: anyEnabled ? '#10b981' : '#ef4444' }} />
+                </div>
+                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{pg.name}</div>
+                <div style={{ fontSize: 11, color: '#888', marginBottom: 10 }}>{pg.accounts.length} Connected</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#888' }}>Chat</span>
+                  <div onClick={e => { e.stopPropagation(); const allOn = pg.accounts.every(a => a.enabled); pg.accounts.forEach(a => toggleAccount(a.id, { enabled: !allOn })); }}
+                    style={{ width: 36, height: 20, borderRadius: 10, background: anyEnabled ? '#10b981' : '#333', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${anyEnabled ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}` }}>
+                    <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 1, left: anyEnabled ? 17 : 1, transition: 'left 0.2s' }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
