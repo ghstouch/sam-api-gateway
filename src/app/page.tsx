@@ -703,11 +703,11 @@ const inputStyle: React.CSSProperties = {
 };
 
 const btnStyle: React.CSSProperties = {
-  background: 'rgba(16,185,129,0.15)',
-  border: '1px solid rgba(16,185,129,0.4)',
+  background: 'rgba(212,168,67,0.1)',
+  border: '1px solid rgba(212,168,67,0.3)',
   borderRadius: 8,
   padding: '8px 16px',
-  color: '#6ee7b7',
+  color: '#d4a843',
   fontSize: 13,
   cursor: 'pointer',
 };
