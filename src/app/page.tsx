@@ -784,7 +784,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
             maxHeight: '90vh', overflow: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h3 style={{ fontSize: 18, margin: 0 }}>Add Provider Account</h3>
+              <h3 style={{ fontSize: 18, margin: 0 }}>Add OpenAI Compatible</h3>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: '#666', fontSize: 20, cursor: 'pointer' }}>×</button>
             </div>
 
