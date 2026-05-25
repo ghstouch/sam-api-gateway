@@ -348,7 +348,13 @@ function KeysTab({ gatewayKeys, onReload, showMsg }: {
             {gatewayKeys.map(k => (
               <tr key={k.key}>
                 <td>{k.name}</td>
-                <td><code style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>{k.key.slice(0, 12)}...{k.key.slice(-6)}</code></td>
+                <td>
+                  <code 
+                    style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4, cursor: 'pointer' }}
+                    onClick={() => { navigator.clipboard.writeText(k.key); showMsg('Copied!'); }}
+                    title="Click to copy"
+                  >{k.key}</code>
+                </td>
                 <td>{k.requestCount}</td>
                 <td>{k.lastUsed ? new Date(k.lastUsed).toLocaleString() : 'Never'}</td>
                 <td><span style={{ color: k.enabled ? '#4ade80' : '#ef4444' }}>{k.enabled ? 'OK' : 'NO'}</span></td>
