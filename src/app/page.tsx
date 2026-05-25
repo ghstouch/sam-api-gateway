@@ -63,9 +63,9 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #064e3b, #0f5132, #022c22)' }}>
       <form onSubmit={handleLogin} style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 40, width: 360 }}>
-        <h1 style={{ color: '#fff', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>🔐 SAM Gateway</h1>
+        <h1 style={{ color: '#fff', textAlign: 'center', marginBottom: 8, fontSize: 28 }}>SAM Gateway</h1>
         <p style={{ color: '#888', textAlign: 'center', marginBottom: 24, fontSize: 14 }}>Multi-Provider OAuth API Gateway</p>
         <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" style={inputStyle} />
         <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Password" style={inputStyle} />
@@ -100,7 +100,7 @@ export default function Dashboard() {
     function onMsg(e: MessageEvent) {
       if (e.data?.type === 'oauth-connected') {
         loadData();
-        showMsg(`✅ ${e.data.provider} OAuth connected!`);
+        showMsg(`${e.data.provider} OAuth connected!`);
       }
     }
     window.addEventListener('message', onMsg);
@@ -125,18 +125,18 @@ export default function Dashboard() {
   if (!token) return <LoginScreen onLogin={setToken} />;
 
   const tabs = [
-    { id: 'overview', label: '📊 Overview' },
-    { id: 'providers', label: '🔌 Providers' },
-    { id: 'keys', label: '🔑 API Keys' },
-    { id: 'oauth', label: '🔐 OAuth' },
-    { id: 'batch', label: '📦 Batch Import' },
+    { id: 'overview', label: 'Overview' },
+    { id: 'providers', label: 'Providers' },
+    { id: 'keys', label: 'API Keys' },
+    { id: 'oauth', label: 'OAuth' },
+    { id: 'batch', label: 'Batch Import' },
   ] as const;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #064e3b, #0f5132, #022c22)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <header style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: 20, margin: 0 }}>⚡ SAM Gateway</h1>
+        <h1 style={{ fontSize: 20, margin: 0 }}>SAM Gateway</h1>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           {msg && <span style={{ color: '#4ade80', fontSize: 13 }}>{msg}</span>}
           <button onClick={() => { localStorage.removeItem('sam_token'); setToken(null); }} style={{ ...btnStyle, fontSize: 12, padding: '6px 12px' }}>Logout</button>
@@ -148,7 +148,7 @@ export default function Dashboard() {
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             ...btnStyle, padding: '8px 16px', fontSize: 13,
-            background: tab === t.id ? 'rgba(139,92,246,0.3)' : 'transparent',
+            background: tab === t.id ? 'rgba(16,185,129,0.3)' : 'transparent',
             border: tab === t.id ? '1px solid rgba(139,92,246,0.5)' : '1px solid transparent',
           }}>{t.label}</button>
         ))}
@@ -171,10 +171,10 @@ function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
   providers: Provider[]; accounts: ProviderAccount[]; gatewayKeys: GatewayKey[]; oauthTokens: OAuthToken[];
 }) {
   const stats = [
-    { label: 'Providers', value: providers.length, icon: '🔌' },
-    { label: 'Provider Accounts', value: accounts.length, sub: `${accounts.filter(a => a.enabled).length} active`, icon: '📡' },
-    { label: 'Gateway Keys', value: gatewayKeys.length, sub: `${gatewayKeys.filter(k => k.enabled).length} active`, icon: '🔑' },
-    { label: 'OAuth Tokens', value: oauthTokens.length, sub: `${oauthTokens.filter(t => t.enabled && t.expiresAt > Date.now()).length} valid`, icon: '🔐' },
+    { label: 'Providers', value: providers.length, icon: '>' },
+    { label: 'Provider Accounts', value: accounts.length, sub: `${accounts.filter(a => a.enabled).length} active`, icon: '*' },
+    { label: 'Gateway Keys', value: gatewayKeys.length, sub: `${gatewayKeys.filter(k => k.enabled).length} active`, icon: '#' },
+    { label: 'OAuth Tokens', value: oauthTokens.length, sub: `${oauthTokens.filter(t => t.enabled && t.expiresAt > Date.now()).length} valid`, icon: '@' },
   ];
 
   return (
@@ -222,7 +222,7 @@ function OverviewTab({ providers, accounts, gatewayKeys, oauthTokens }: {
               Models: {p.models.join(', ')}
             </div>
             <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
-              Auth: {p.authMethods.join(', ')} {p.hasOAuth && '🔐'}
+              Auth: {p.authMethods.join(', ')} {p.hasOAuth && '(oauth)'}
             </div>
           </div>
         ))}
@@ -294,7 +294,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                 <td>{a.authMethod}</td>
                 <td>{a.priority}</td>
                 <td>{a.requestCount}</td>
-                <td><span style={{ color: a.enabled ? '#4ade80' : '#ef4444' }}>{a.enabled ? '✓' : '✗'}</span></td>
+                <td><span style={{ color: a.enabled ? '#4ade80' : '#ef4444' }}>{a.enabled ? 'OK' : 'NO'}</span></td>
                 <td style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
                   <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px', background: 'rgba(239,68,68,0.2)' }}>Delete</button>
@@ -351,7 +351,7 @@ function KeysTab({ gatewayKeys, onReload, showMsg }: {
                 <td><code style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>{k.key.slice(0, 12)}...{k.key.slice(-6)}</code></td>
                 <td>{k.requestCount}</td>
                 <td>{k.lastUsed ? new Date(k.lastUsed).toLocaleString() : 'Never'}</td>
-                <td><span style={{ color: k.enabled ? '#4ade80' : '#ef4444' }}>{k.enabled ? '✓' : '✗'}</span></td>
+                <td><span style={{ color: k.enabled ? '#4ade80' : '#ef4444' }}>{k.enabled ? 'OK' : 'NO'}</span></td>
                 <td style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => { navigator.clipboard.writeText(k.key); showMsg('Copied!'); }} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>Copy</button>
                   <button onClick={() => toggleKey(k.key)} style={{ ...btnStyle, fontSize: 11, padding: '4px 8px' }}>{k.enabled ? 'Disable' : 'Enable'}</button>
@@ -502,7 +502,7 @@ Client C|60`,
 
   return (
     <div>
-      <h2 style={{ fontSize: 18, marginBottom: 16 }}>📦 Batch Import</h2>
+      <h2 style={{ fontSize: 18, marginBottom: 16 }}>Batch Import</h2>
 
       <form onSubmit={importBatch} style={cardStyle}>
         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -534,8 +534,8 @@ Client C|60`,
         <div style={{ ...cardStyle, marginTop: 16 }}>
           <h3 style={{ fontSize: 14, marginBottom: 8 }}>Import Result</h3>
           <div style={{ display: 'flex', gap: 24 }}>
-            <span style={{ color: '#4ade80' }}>✓ Success: {batchResult.success}</span>
-            {batchResult.failed > 0 && <span style={{ color: '#ef4444' }}>✗ Failed: {batchResult.failed}</span>}
+            <span style={{ color: '#4ade80' }}>OK Success: {batchResult.success}</span>
+            {batchResult.failed > 0 && <span style={{ color: '#ef4444' }}>NO Failed: {batchResult.failed}</span>}
           </div>
           {batchResult.errors?.length > 0 && (
             <div style={{ marginTop: 12 }}>
@@ -553,7 +553,7 @@ Client C|60`,
         <h3 style={{ fontSize: 14, marginBottom: 8 }}>Available Providers</h3>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {providers.map(p => (
-            <span key={p.id} style={{ background: 'rgba(139,92,246,0.2)', padding: '4px 10px', borderRadius: 6, fontSize: 12 }}>
+            <span key={p.id} style={{ background: 'rgba(16,185,129,0.2)', padding: '4px 10px', borderRadius: 6, fontSize: 12 }}>
               {p.icon} {p.id}
             </span>
           ))}
@@ -575,11 +575,11 @@ const inputStyle: React.CSSProperties = {
 };
 
 const btnStyle: React.CSSProperties = {
-  background: 'rgba(139,92,246,0.2)',
-  border: '1px solid rgba(139,92,246,0.3)',
+  background: 'rgba(16,185,129,0.2)',
+  border: '1px solid rgba(16,185,129,0.3)',
   borderRadius: 8,
   padding: '8px 16px',
-  color: '#c4b5fd',
+  color: '#6ee7b7',
   fontSize: 13,
   cursor: 'pointer',
 };

@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     // Return success page — auto-close after 2s, notify parent
     return new NextResponse(`
       <html><body style="background:#1a1a2e;color:#eee;font-family:sans-serif;text-align:center;padding:50px">
-        <h2>✅ OAuth Connected</h2>
+        <h2>OAuth Connected</h2>
         <p>Provider: kiro</p>
         <p>Token ID: ${token.id}</p>
         <p>Expires: ${new Date(token.expiresAt).toLocaleString()}</p>
