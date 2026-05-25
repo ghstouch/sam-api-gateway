@@ -709,26 +709,45 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
           {providerGroups.map(pg => {
             const anyEnabled = pg.accounts.some(a => a.enabled);
-            // Provider logo/icon
+            // Provider logo SVG component
             const pid = pg.id.toLowerCase();
-            let logo = '🔗';
-            if (pid.includes('openai') || pid.includes('openrouter') || pid.includes('agentrouter')) logo = '🧠';
-            else if (pid.includes('anthropic') || pid.includes('claude')) logo = '🎭';
-            else if (pid.includes('gemini') || pid.includes('google')) logo = '🔮';
-            else if (pid.includes('mimo') || pid.includes('xiaomi')) logo = '🤖';
-            else if (pid.includes('kiro')) logo = '⚡';
-            else if (pid.includes('deepseek')) logo = '🐋';
-            else if (pid.includes('mistral')) logo = '💨';
-            else if (pid.includes('groq')) logo = '⚡';
+            let logoColor = '#10b981';
+            let logoType = 'default';
+            if (pid.includes('openai') || pid.includes('openrouter') || pid.includes('agentrouter')) { logoColor = '#10b981'; logoType = 'openai'; }
+            else if (pid.includes('anthropic') || pid.includes('claude')) { logoColor = '#d4a843'; logoType = 'anthropic'; }
+            else if (pid.includes('gemini') || pid.includes('google')) { logoColor = '#4285f4'; logoType = 'gemini'; }
+            else if (pid.includes('mimo') || pid.includes('xiaomi')) { logoColor = '#ff6b00'; logoType = 'mimo'; }
+            else if (pid.includes('kiro')) { logoColor = '#ff9900'; logoType = 'kiro'; }
+            else if (pid.includes('deepseek')) { logoColor = '#0066ff'; logoType = 'deepseek'; }
+            else if (pid.includes('mistral')) { logoColor = '#ff7000'; logoType = 'mistral'; }
+            else if (pid.includes('groq')) { logoColor = '#f55036'; logoType = 'groq'; }
+
+            const logoSvg: Record<string, string> = {
+              openai: '<path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073z"/>',
+              anthropic: '<path d="M13.827 3.52h3.603L24 20.48h-3.603l-6.57-16.96zm-7.258 0h3.767L16.906 20.48h-3.674l-1.632-4.317h-6.46l-1.59 4.317H0L6.57 3.52zm1.04 5.412l-2.18 5.722h4.34l-2.16-5.722z"/>',
+              gemini: '<path d="M12 2L9.5 8.5L3 11l6.5 2.5L12 20l2.5-6.5L21 11l-6.5-2.5z"/>',
+              mimo: '<circle cx="12" cy="8" r="4"/><path d="M12 14c-6 0-8 3-8 5v1h16v-1c0-2-2-5-8-5z"/>',
+              kiro: '<path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z"/>',
+              deepseek: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>',
+              mistral: '<path d="M3 3h4v4H3V3zm7 0h4v4h-4V3zm7 0h4v4h-4V3zM3 10h4v4H3v-4zm7 0h4v4h-4v-4zm7 0h4v4h-4v-4zM3 17h4v4H3v-4zm7 0h4v4h-4v-4zm7 0h4v4h-4v-4z"/>',
+              groq: '<path d="M12 2L2 12l10 10 10-10L12 2zm0 4l6 6-6 6-6-6 6-6z"/>',
+              default: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>'
+            };
+
+            const logoElement = (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={20} height={20} fill={logoColor} style={{ flexShrink: 0 }}>
+                <g dangerouslySetInnerHTML={{ __html: logoSvg[logoType] || logoSvg.default }} />
+              </svg>
+            );
             return (
               <div key={pg.id} onClick={() => setSelectedProvider(pg.id)}
-                style={{ ...cardStyle, cursor: 'pointer', transition: 'all 0.2s', borderColor: anyEnabled ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.15)' }}
+                style={{ ...cardStyle, padding: '16px 20px', cursor: 'pointer', transition: 'all 0.2s', borderColor: anyEnabled ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.15)' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = anyEnabled ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.15)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
               >
                 {/* Logo + Name row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                  <span style={{ fontSize: 24 }}>{logo}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  {logoElement}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{pg.name}</div>
                     <div style={{ fontSize: 11, color: anyEnabled ? '#10b981' : '#666', transition: 'color 0.2s' }}>{anyEnabled ? 'Connected' : 'Disabled'}</div>
