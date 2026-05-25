@@ -48,14 +48,18 @@ export async function GET(req: NextRequest) {
       tokenType: tokenData.token_type,
     });
 
-    // Return success page
+    // Return success page — auto-close after 2s, notify parent
     return new NextResponse(`
       <html><body style="background:#1a1a2e;color:#eee;font-family:sans-serif;text-align:center;padding:50px">
         <h2>✅ OAuth Connected</h2>
         <p>Provider: google-gemini</p>
         <p>Token ID: ${token.id}</p>
         <p>Expires: ${new Date(token.expiresAt).toLocaleString()}</p>
-        <p style="color:#888;margin-top:20px">You can close this window.</p>
+        <p style="color:#888;margin-top:20px">Closing in 2 seconds...</p>
+        <script>
+          if (window.opener) { window.opener.postMessage({ type: 'oauth-connected', provider: 'google-gemini' }, '*'); }
+          setTimeout(() => window.close(), 2000);
+        </script>
       </body></html>
     `, { headers: { 'Content-Type': 'text/html' } });
   } catch (e) {

@@ -95,6 +95,18 @@ export default function Dashboard() {
     if (token) loadData();
   }, [token]);
 
+  // Listen for OAuth success from popup window → auto-refresh
+  useEffect(() => {
+    function onMsg(e: MessageEvent) {
+      if (e.data?.type === 'oauth-connected') {
+        loadData();
+        showMsg(`✅ ${e.data.provider} OAuth connected!`);
+      }
+    }
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, [token]);
+
   async function loadData() {
     const [p, a, k, o] = await Promise.all([
       api('/api/admin/config'),
