@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #0f0c29;
+  color: #eee;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 4px; }
+
+table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-weight: 600;
+  color: #aaa;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(139,92,246,0.5);
+  box-shadow: 0 0 0 2px rgba(139,92,246,0.1);
+}
+
+button:hover {
+  background: rgba(139,92,246,0.3) !important;
+}
+
+a:hover {
+  opacity: 0.9;
+}
