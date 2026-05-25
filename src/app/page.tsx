@@ -737,28 +737,33 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.12)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
               >
-                <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                  {/* Left: Gold-bordered icon */}
-                  <div style={{ width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(212,168,67,0.3)', background: 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  {/* Left: Icon - vertically centered with full content */}
+                  <div style={{ width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(212,168,67,0.3)', background: 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'center' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={22} height={22} fill="#d4a843">
                       <g dangerouslySetInnerHTML={{ __html: logoSvg }} />
                     </svg>
                   </div>
 
-                  {/* Center: Name + status */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{a.name}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: a.enabled ? '#d4a843' : '#555', flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, color: a.enabled ? '#d4a843' : '#555' }}>{a.enabled ? 'Connected' : 'Disabled'}</span>
-                      <span style={{ fontSize: 10, background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.15)', borderRadius: 4, padding: '1px 6px', color: '#888', marginLeft: 4 }}>{a.apiType || 'Chat'}</span>
+                  {/* Center: Name, status badge, chat button - stacked */}
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center' }}>
+                    {/* Name row */}
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
+                    {/* Status badge */}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: a.enabled ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '4px 12px', width: 'fit-content' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: a.enabled ? '#10b981' : '#555', flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: a.enabled ? '#10b981' : '#555', fontWeight: 500 }}>{a.enabled ? '1 Connected' : 'Disabled'}</span>
                     </div>
+                    {/* Chat button */}
+                    <span style={{ display: 'inline-block', fontSize: 11, background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '4px 14px', color: '#aaa', width: 'fit-content' }}>{a.apiType || 'Chat'}</span>
                   </div>
 
-                  {/* Right: Toggle (SAM gold style) */}
-                  <div onClick={e => { e.stopPropagation(); toggleAccount(a.id, { enabled: !a.enabled }); }}
-                    style={{ width: 40, height: 22, borderRadius: 11, background: a.enabled ? 'linear-gradient(135deg, #d4a843, #c9a227)' : '#2a2a2a', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${a.enabled ? 'rgba(212,168,67,0.4)' : 'rgba(255,255,255,0.08)'}`, flexShrink: 0 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: a.enabled ? '#0a0a0a' : '#555', position: 'absolute', top: 1, left: a.enabled ? 19 : 1, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
+                  {/* Right: Toggle - vertically centered with name+status area */}
+                  <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                    <div onClick={e => { e.stopPropagation(); toggleAccount(a.id, { enabled: !a.enabled }); }}
+                      style={{ width: 40, height: 22, borderRadius: 11, background: a.enabled ? '#dc3545' : '#2a2a2a', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${a.enabled ? 'rgba(220,53,69,0.4)' : 'rgba(255,255,255,0.08)'}` }}>
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 1, left: a.enabled ? 19 : 1, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
+                    </div>
                   </div>
                 </div>
               </div>
