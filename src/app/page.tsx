@@ -733,37 +733,32 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
 
             return (
               <div key={a.id} onClick={() => setSelectedProvider(a.provider)}
-                style={{ ...cardStyle, padding: '16px 20px', cursor: 'pointer', transition: 'all 0.2s', borderColor: 'rgba(255,255,255,0.06)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#d4a843'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+                style={{ ...cardStyle, padding: '14px 18px', cursor: 'pointer', transition: 'all 0.2s', borderColor: 'rgba(212,168,67,0.12)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(212,168,67,0.12)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
               >
-                <div style={{ display: 'flex', gap: 14 }}>
-                  {/* Left: White logo icon - stretch to match center height */}
-                  <div style={{ width: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={28} height={28} fill="#fff" style={{ opacity: 0.85 }}>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                  {/* Left: Gold-bordered icon */}
+                  <div style={{ width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(212,168,67,0.3)', background: 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={22} height={22} fill="#d4a843">
                       <g dangerouslySetInnerHTML={{ __html: logoSvg }} />
                     </svg>
                   </div>
 
-                  {/* Center: Name, status, badge */}
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
-                    {/* Status: green dot + "N Connected" */}
+                  {/* Center: Name + status */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{a.name}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: a.enabled ? '#10b981' : '#666', flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, color: a.enabled ? '#10b981' : '#666' }}>{a.enabled ? 'Connected' : 'Disabled'}</span>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: a.enabled ? '#d4a843' : '#555', flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: a.enabled ? '#d4a843' : '#555' }}>{a.enabled ? 'Connected' : 'Disabled'}</span>
+                      <span style={{ fontSize: 10, background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.15)', borderRadius: 4, padding: '1px 6px', color: '#888', marginLeft: 4 }}>{a.apiType || 'Chat'}</span>
                     </div>
-                    {/* API type badge */}
-                    <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.06)', borderRadius: 6, padding: '3px 10px', color: '#aaa', width: 'fit-content' }}>{a.apiType || 'Chat'}</span>
                   </div>
 
-                  {/* Right: Orange dot + toggle - stretch to match center height */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.enabled ? '#ff9900' : '#333' }} />
-                    <div onClick={e => { e.stopPropagation(); toggleAccount(a.id, { enabled: !a.enabled }); }}
-                      style={{ width: 40, height: 22, borderRadius: 11, background: a.enabled ? '#dc3545' : '#333', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${a.enabled ? 'rgba(220,53,69,0.4)' : 'rgba(255,255,255,0.1)'}` }}>
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 1, left: a.enabled ? 19 : 1, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
-                    </div>
+                  {/* Right: Toggle (SAM gold style) */}
+                  <div onClick={e => { e.stopPropagation(); toggleAccount(a.id, { enabled: !a.enabled }); }}
+                    style={{ width: 40, height: 22, borderRadius: 11, background: a.enabled ? 'linear-gradient(135deg, #d4a843, #c9a227)' : '#2a2a2a', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${a.enabled ? 'rgba(212,168,67,0.4)' : 'rgba(255,255,255,0.08)'}`, flexShrink: 0 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: a.enabled ? '#0a0a0a' : '#555', position: 'absolute', top: 1, left: a.enabled ? 19 : 1, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
                   </div>
                 </div>
               </div>
