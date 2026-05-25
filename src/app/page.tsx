@@ -599,6 +599,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [form, setForm] = useState({ provider: '', name: '', authMethod: 'apikey' as 'apikey' | 'oauth', apiKey: '', baseUrl: '', apiType: 'chat', priority: '0', rateLimit: '0' });
   const [checking, setChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
   // Group accounts by provider
   const providerGroups = providers.map(p => ({
@@ -632,13 +633,21 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   }
 
   async function checkKey() {
-    if (!form.apiKey || !form.baseUrl) { showMsg('Need API key + base URL to check'); return; }
+    if (!form.apiKey || !form.baseUrl) { setCheckResult({ ok: false, msg: 'Need API key + base URL' }); return; }
     setChecking(true);
+    setCheckResult(null);
     try {
       const res = await fetch(form.baseUrl + '/models', { headers: { 'Authorization': 'Bearer ' + form.apiKey } });
-      if (res.ok) showMsg('Key valid! Connected.');
-      else showMsg('Key invalid or endpoint unreachable (' + res.status + ')');
-    } catch { showMsg('Connection failed'); }
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        const count = data?.data?.length || 0;
+        setCheckResult({ ok: true, msg: `Connected! ${count} model${count !== 1 ? 's' : ''} found.` });
+      } else {
+        setCheckResult({ ok: false, msg: `Failed (${res.status}) — key invalid or endpoint unreachable` });
+      }
+    } catch {
+      setCheckResult({ ok: false, msg: 'Connection failed — check base URL' });
+    }
     setChecking(false);
   }
 
@@ -650,6 +659,7 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
 
   function openAddModal(providerId?: string) {
     setForm(f => ({ ...f, provider: providerId || '', name: '', apiKey: '', baseUrl: '' }));
+    setCheckResult(null);
     setShowModal(true);
   }
 
@@ -780,10 +790,17 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
               {/* Provider */}
               <div>
                 <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>Provider *</label>
-                <select value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })} style={{ ...inputStyle, width: '100%' }} required>
-                  <option value="">Select provider</option>
-                  {providers.map(p => <option key={p.id} value={p.id}>{p.icon} {p.name}</option>)}
-                </select>
+                <input value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })} placeholder="e.g. openai, anthropic, xiaomi-mimo" style={{ ...inputStyle, width: '100%' }} required />
+                <span style={{ fontSize: 11, color: '#555' }}>Provider ID — type any name or select from known providers.</span>
+                {/* Quick picks */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                  {providers.map(p => (
+                    <button key={p.id} type="button" onClick={() => setForm({ ...form, provider: p.id, baseUrl: p.baseUrl || '' })}
+                      style={{ ...btnStyle, fontSize: 11, padding: '3px 10px', background: form.provider === p.id ? 'rgba(212,168,67,0.2)' : 'rgba(255,255,255,0.05)', borderColor: form.provider === p.id ? '#d4a843' : 'rgba(255,255,255,0.1)' }}>
+                      {p.icon} {p.name}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Name */}
@@ -818,11 +835,21 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
                 <div>
                   <label style={{ fontSize: 12, color: '#888', marginBottom: 6, display: 'block' }}>API Key</label>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <input value={form.apiKey} onChange={e => setForm({ ...form, apiKey: e.target.value })} placeholder="sk-..." style={{ ...inputStyle, flex: 1 }} required />
+                    <input value={form.apiKey} onChange={e => { setForm({ ...form, apiKey: e.target.value }); setCheckResult(null); }} placeholder="sk-..." style={{ ...inputStyle, flex: 1 }} required />
                     <button type="button" onClick={checkKey} disabled={checking} style={{ ...btnStyle, whiteSpace: 'nowrap', opacity: checking ? 0.5 : 1 }}>
                       {checking ? 'Checking...' : 'Check'}
                     </button>
                   </div>
+                  {checkResult && (
+                    <div style={{
+                      marginTop: 8, padding: '8px 12px', borderRadius: 8, fontSize: 13,
+                      background: checkResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                      border: `1px solid ${checkResult.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                      color: checkResult.ok ? '#10b981' : '#ef4444',
+                    }}>
+                      {checkResult.ok ? '✓' : '✗'} {checkResult.msg}
+                    </div>
+                  )}
                 </div>
               )}
 
