@@ -670,25 +670,19 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
             <span style={{ fontSize: 18 }}>←</span> Back to Providers
           </button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(212,168,67,0.3)', background: 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={22} height={22} fill="#d4a843">
-              <circle cx="12" cy="12" r="10"/>
-            </svg>
-          </div>
-          <div>
-            <h2 style={{ fontSize: 20, margin: 0, fontWeight: 600 }}>{pg.name}</h2>
-            <span style={{ color: '#666', fontSize: 12 }}>{pg.accounts.length} connection{pg.accounts.length !== 1 ? 's' : ''}</span>
-          </div>
-          <span style={{ marginLeft: 'auto', color: '#444', fontSize: 18, cursor: 'pointer' }}>👁</span>
-        </div>
 
         {/* OpenAI Compatible Details */}
         <div style={headerStyle}>OpenAI Compatible Details</div>
         <div style={sectionStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontSize: 14, color: '#ccc', fontWeight: 500 }}>Chat Completions</span>
-            <span style={{ fontSize: 12, color: '#666' }}>{pg.accounts[0]?.baseUrl ? (pg.accounts[0].baseUrl.replace(/\/v1\/?$/, '')) : 'https://api.openai.com'}/v1/chat/completions</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 14, color: '#ccc', fontWeight: 500, marginBottom: 4 }}>Chat Completions</div>
+              <div style={{ fontSize: 12, color: '#666' }}>{pg.accounts[0]?.baseUrl ? (pg.accounts[0].baseUrl.replace(/\/v1\/?$/, '')) : 'https://api.openai.com'}/v1/chat/completions</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#d4a843', marginBottom: 4 }}>{pg.name}</div>
+              <div style={{ fontSize: 11, color: '#666' }}>{pg.accounts[0]?.baseUrl || 'https://api.openai.com'}</div>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button style={{ ...btnStyle, background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: 12 }}>+ Add</button>
