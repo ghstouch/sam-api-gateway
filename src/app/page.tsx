@@ -157,7 +157,7 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
 // ─── Main Dashboard ───
 export default function Dashboard() {
   const [token, setToken] = useState<string | null>(null);
-  const [tab, setTab] = useState<'overview' | 'providers' | 'keys' | 'oauth' | 'batch'>('overview');
+  const [tab, setTab] = useState<'overview' | 'providers' | 'keys'>('overview');
   const [providers, setProviders] = useState<Provider[]>([]);
   const [accounts, setAccounts] = useState<ProviderAccount[]>([]);
   const [gatewayKeys, setGatewayKeys] = useState<GatewayKey[]>([]);
@@ -205,10 +205,8 @@ export default function Dashboard() {
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'providers', label: 'Providers' },
-    { id: 'keys', label: 'API Keys' },
-    { id: 'oauth', label: 'OAuth' },
-    { id: 'batch', label: 'Batch Import' },
-  ] as const;
+    { id: 'keys', label: 'End Points' },
+  ];
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0f00 50%, #0a0a0a 100%)', color: '#eee', fontFamily: 'system-ui, sans-serif' }}>
@@ -256,7 +254,7 @@ export default function Dashboard() {
             <button
               className="tab-btn"
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => setTab(t.id as 'overview' | 'providers' | 'keys')}
               onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = '#d4a843'; }}
               onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = '#888'; }}
               style={{
@@ -285,8 +283,6 @@ export default function Dashboard() {
         {tab === 'overview' && <OverviewTab providers={providers} accounts={accounts} gatewayKeys={gatewayKeys} oauthTokens={oauthTokens} />}
         {tab === 'providers' && <ProvidersTab providers={providers} accounts={accounts} onReload={loadData} showMsg={showMsg} />}
         {tab === 'keys' && <KeysTab gatewayKeys={gatewayKeys} onReload={loadData} showMsg={showMsg} />}
-        {tab === 'oauth' && <OAuthTab providers={providers} oauthTokens={oauthTokens} onReload={loadData} showMsg={showMsg} />}
-        {tab === 'batch' && <BatchTab providers={providers} onReload={loadData} showMsg={showMsg} />}
       </main>
     </div>
   );
@@ -868,7 +864,7 @@ function KeysTab({ gatewayKeys, onReload, showMsg }: {
 
   return (
     <div>
-      <h2 style={{ fontSize: 18, marginBottom: 16 }}>Gateway API Keys</h2>
+      <h2 style={{ fontSize: 18, marginBottom: 16 }}>End Points</h2>
 
       {/* Generate Key Form */}
       <form onSubmit={generateKey} style={{ ...cardStyle, marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
