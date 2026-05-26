@@ -657,27 +657,131 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
   if (selectedProvider) {
     const pg = providerGroups.find(p => p.id === selectedProvider);
     if (!pg) { setSelectedProvider(null); return null; }
+
+    const headerStyle = { fontSize: 13, fontWeight: 600, color: '#888', textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 16 };
+    const sectionStyle = { ...cardStyle, padding: '20px 24px', marginBottom: 16 };
+    const rowStyle = { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.04)' };
+
     return (
       <div>
-        <button onClick={() => setSelectedProvider(null)} style={{ ...btnStyle, marginBottom: 16, fontSize: 13 }}>Back to Providers</button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-          <span style={{ fontSize: 32 }}>🔗</span>
-          <div><h2 style={{ fontSize: 22, margin: 0 }}>{pg.name}</h2><p style={{ color: '#888', margin: 0, fontSize: 13 }}>{pg.accounts.length} connection{pg.accounts.length !== 1 ? 's' : ''}</p></div>
-          <button onClick={() => openAddModal(pg.id)} style={{ ...btnStyle, marginLeft: 'auto', background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontWeight: 500, borderColor: 'rgba(239,68,68,0.3)' }}>+ Add Key</button>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <button onClick={() => setSelectedProvider(null)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6, padding: 0 }}>
+            <span style={{ fontSize: 18 }}>←</span> Back to Providers
+          </button>
         </div>
-        <h3 style={{ fontSize: 16, marginBottom: 12 }}>Connections</h3>
-        {pg.accounts.map((a, i) => (
-          <div key={a.id} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px', marginBottom: 8 }}>
-            <span style={{ color: a.enabled ? '#10b981' : '#ef4444', fontSize: 10 }}>●</span>
-            <span style={{ color: '#888', fontSize: 12, minWidth: 20 }}>#{i + 1}</span>
-            <span style={{ fontWeight: 500, fontSize: 14, flex: 1 }}>{a.name}</span>
-            {a.apiKey && <code style={{ fontSize: 11, color: '#888' }}>{maskKey(a.apiKey)}</code>}
-            <span style={{ fontSize: 11, color: '#888' }}>{a.requestCount.toLocaleString()} req</span>
-            <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#888' }}>{a.apiType || 'chat'}</span>
-            <button onClick={() => toggleAccount(a.id, { enabled: !a.enabled })} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px' }}>{a.enabled ? 'Disable' : 'Enable'}</button>
-            <button onClick={() => deleteAccount(a.id)} style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Delete</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(212,168,67,0.3)', background: 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={22} height={22} fill="#d4a843">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
           </div>
-        ))}
+          <div>
+            <h2 style={{ fontSize: 20, margin: 0, fontWeight: 600 }}>{pg.name}</h2>
+            <span style={{ color: '#666', fontSize: 12 }}>{pg.accounts.length} connection{pg.accounts.length !== 1 ? 's' : ''}</span>
+          </div>
+          <span style={{ marginLeft: 'auto', color: '#444', fontSize: 18, cursor: 'pointer' }}>👁</span>
+        </div>
+
+        {/* OpenAI Compatible Details */}
+        <div style={headerStyle}>OpenAI Compatible Details</div>
+        <div style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <span style={{ fontSize: 14, color: '#ccc', fontWeight: 500 }}>Chat Completions</span>
+            <span style={{ fontSize: 12, color: '#666' }}>{pg.accounts[0]?.baseUrl ? (pg.accounts[0].baseUrl.replace(/\/v1\/?$/, '')) : 'https://api.openai.com'}/v1/chat/completions</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button style={{ ...btnStyle, background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: 12 }}>+ Add</button>
+            <button style={{ ...btnStyle, fontSize: 12 }}>Edit</button>
+            <button style={{ ...btnStyle, fontSize: 12 }}>Delete</button>
+          </div>
+        </div>
+
+        {/* Connections */}
+        <div style={headerStyle}>Connections</div>
+        <div style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 13, color: '#888' }}>Provider Proxy</span>
+              <div style={{ width: 40, height: 22, borderRadius: 11, background: '#2a2a2a', cursor: 'pointer', position: 'relative', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#555', position: 'absolute', top: 1, left: 1, transition: 'left 0.2s' }} />
+              </div>
+              <span style={{ fontSize: 13, color: '#666' }}>{pg.accounts.length} accounts</span>
+            </div>
+            <button style={{ ...btnStyle, fontSize: 12, background: 'rgba(255,255,255,0.06)', color: '#ccc' }}>▶ Test All</button>
+          </div>
+
+          {pg.accounts.map((a, i) => (
+            <div key={a.id} style={i > 0 ? rowStyle : { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0' }}>
+              <span style={{ color: '#555', fontSize: 13, minWidth: 20 }}>{pg.accounts.length - i}</span>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ color: a.enabled ? '#10b981' : '#ef4444', fontSize: 10 }}>●</span>
+                <span style={{ fontSize: 13, color: '#ccc' }}>connected #{i + 1}</span>
+                <span style={{ fontSize: 10, background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '2px 8px', borderRadius: 4, fontWeight: 500 }}>Protected</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: 'rgba(255,255,255,0.06)', color: '#888' }}>Re-Test</button>
+                <div onClick={e => { e.stopPropagation(); toggleAccount(a.id, { enabled: !a.enabled }); }}
+                  style={{ width: 40, height: 22, borderRadius: 11, background: a.enabled ? '#dc3545' : '#2a2a2a', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', border: `1px solid ${a.enabled ? 'rgba(220,53,69,0.4)' : 'rgba(255,255,255,0.08)'}` }}>
+                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 1, left: a.enabled ? 19 : 1, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
+                </div>
+                <button style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 14, padding: 4 }}>✎</button>
+                <button onClick={() => deleteAccount(a.id)} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 14, padding: 4 }}>🗑</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Available Models */}
+        <div style={headerStyle}>Available Models</div>
+        <div style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 13, color: '#888' }}>Auto-Sync</span>
+              <div style={{ width: 40, height: 22, borderRadius: 11, background: '#dc3545', cursor: 'pointer', position: 'relative', border: '1px solid rgba(220,53,69,0.4)' }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 1, left: 19, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
+              </div>
+            </div>
+            <button style={{ ...btnStyle, fontSize: 12, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Clear All Models</button>
+          </div>
+
+          <p style={{ fontSize: 12, color: '#555', marginBottom: 12 }}>Add OpenAI-compatible models manually or import them from the /models endpoint.</p>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <input placeholder="Model ID" style={{ ...inputStyle, flex: 1 }} />
+            <button style={{ ...btnStyle, background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: 12 }}>+ Add</button>
+            <button style={{ ...btnStyle, fontSize: 12 }}>Import from /models</button>
+          </div>
+
+          <input placeholder="🔍 Filter models..." style={{ ...inputStyle, marginBottom: 12 }} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, fontSize: 12, color: '#666' }}>
+            <span style={{ cursor: 'pointer', color: '#10b981' }}>✓ Select all</span>
+            <span style={{ cursor: 'pointer' }}>Deselect all</span>
+            <span style={{ marginLeft: 'auto' }}>8/8 active</span>
+          </div>
+
+          {/* Model list */}
+          {[
+            { id: 'claude-opus-4-7', path: `${pg.name}/claude-opus-4-7` },
+            { id: 'claude-sonnet-4-6', path: `${pg.name}/claude-sonnet-4-6` },
+            { id: 'claude-opus-4-6', path: `${pg.name}/claude-opus-4-6` },
+            { id: 'claude-haiku-4-5-20251001', path: `${pg.name}/claude-haiku-4-5-20251001` },
+            { id: 'gpt-4o', path: `${pg.name}/gpt-4o` },
+            { id: 'gpt-4o-mini', path: `${pg.name}/gpt-4o-mini` },
+          ].map((m, i) => (
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+              <input type="checkbox" defaultChecked style={{ accentColor: '#10b981' }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, color: '#ccc', fontWeight: 500 }}>{m.id}</div>
+                <div style={{ fontSize: 11, color: '#555' }}>/{m.path}</div>
+              </div>
+              <span style={{ fontSize: 10, background: 'rgba(96,165,250,0.15)', color: '#60a5fa', padding: '2px 8px', borderRadius: 4, fontWeight: 500 }}>IMPORTED</span>
+              <button style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 14, padding: 4 }}>👁</button>
+              <button style={{ ...btnStyle, fontSize: 11, padding: '4px 10px', background: 'rgba(255,255,255,0.06)', color: '#888' }}>Compatibility</button>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
