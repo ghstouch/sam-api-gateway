@@ -676,12 +676,12 @@ function ProvidersTab({ providers, accounts, onReload, showMsg }: {
         <div style={sectionStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 14, color: '#ccc', fontWeight: 500, marginBottom: 4 }}>Chat Completions</div>
-              <div style={{ fontSize: 12, color: '#666' }}>{pg.accounts[0]?.baseUrl ? (pg.accounts[0].baseUrl.replace(/\/v1\/?$/, '')) : 'https://api.openai.com'}/v1/chat/completions</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 16, fontWeight: 600, color: '#d4a843', marginBottom: 4 }}>{pg.name}</div>
               <div style={{ fontSize: 11, color: '#666' }}>{pg.accounts[0]?.baseUrl || 'https://api.openai.com'}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 14, color: '#ccc', fontWeight: 500, marginBottom: 4 }}>Chat Completions</div>
+              <div style={{ fontSize: 12, color: '#666' }}>{pg.accounts[0]?.baseUrl ? (pg.accounts[0].baseUrl.replace(/\/v1\/?$/, '')) : 'https://api.openai.com'}/v1/chat/completions</div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
